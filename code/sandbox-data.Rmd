@@ -1,0 +1,322 @@
+---
+title: "sandbox-data"
+author: "JJayes"
+date: "19/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(glue)
+
+```
+
+## Purpose
+
+To create some summary data from the data LR sent me - I'll use this summary data in the presentation on data viz.
+
+```{r}
+df <- read_rds("data/df_clean.rds")
+
+df <- df %>% 
+  select(`Parish name`, 
+         Year_baptized, Month_baptized, Day_baptized, 
+         Christian_name, Surname_b,
+         Year_of_birth, Month_of_birth, Day_of_birth, 
+         Race, 
+         Female_age, Female_surname, Female_name, Female_country, Female_profession,
+         Male_age, Male_surname, Male_name, Male_country, Male_Profession)
+
+df <- df %>% 
+  janitor::clean_names()
+
+df <- df %>% 
+  mutate(parish_address = case_when(
+    
+    str_detect(parish_name, "Christ Church") ~ "16 Summerley Rd, Kenilworth, Cape Town, 7708, South Africa",
+    str_detect(parish_name, "St Mark") ~ "30 Bamford Ave, Athlone, Cape Town, 7760, South Africa",
+    str_detect(parish_name, "St Peter") ~ "Victoria Rd, Mowbray, Cape Town, 7700, South Africa",
+    str_detect(parish_name, "St James") ~ "St James Rd, Sea Point, Cape Town, 8005, South Africa",
+    str_detect(parish_name, "St Cyprian") ~ "2B Papu St, Langa, Cape Town, 7456, South Africa",
+    str_detect(parish_name, "Maitland") ~ "3 Fontana St, Brooklyn, Cape Town, 7405, South Africa",
+    str_detect(parish_name, "St Margaret") ~ "25 Jansen St, Cape Town, 7500, South Africa",
+    TRUE ~ " "
+  ))
+
+df %>% 
+  count(male_country, sort = T) 
+
+df %>% 
+  count(female_country, sort = T) 
+
+df %>% 
+  count(male_profession, sort = T) 
+
+df %>% 
+  count(female_profession, sort = T)
+
+df %>% distinct(parish_address)
+
+```
+
+### Map
+
+How to use tidy geocoder
+
+```{r}
+library(tidygeocoder)
+
+# locations <- df %>%
+#   select(parish_address) %>%
+#   distinct() %>%
+#   tidygeocoder::geocode(address = parish_address,
+#           method = "osm")
+# 
+# write_rds(locations, "data/locations.rds")
+
+locations <- read_rds("data/locations.rds")
+
+df <- df %>% 
+  inner_join(locations, by = "parish_address")
+
+locations %>% 
+  ggplot(aes(long, lat, label = parish_address)) +
+  geom_point() +
+  geom_text()
+```
+
+### Basic map with topography
+
+```{r}
+library(ggmap)
+locations %>% 
+  skimr::skim()
+
+# create boudning box for map image
+b_box <- c(left = 18.35, bottom = -34.02, right = 18.65, top = -33.85)
+
+# create map
+CT_map <- get_map(b_box, zoom = 13)
+```
+
+### Nice!
+
+```{r}
+ggmap(CT_map) +
+    geom_point(aes(long, lat), 
+               data = locations) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+               data = df %>% distinct(parish_name, long, lat))
+
+```
+
+### What can we fix?
+
+```{r}
+
+ggmap(CT_map) +
+    geom_point(aes(long, lat), 
+               data = locations,
+               size = 3,
+               show.legend = F) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+            vjust = 1.1,
+               data = df %>% distinct(parish_name, long, lat) %>% 
+              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                     parish_name = str_replace(parish_name, ",", "\n"))) +
+  theme_void() +
+  labs(title = "Where are our churches located?")
+
+```
+
+### Can we add more meaningful information to the plot?
+
+- How many observations are there per church?
+
+```{r}
+
+df %>% 
+  group_by(parish_name) %>% 
+  summarise(n_obs = n()) %>% 
+  arrange(desc(n_obs))
+
+df %>% 
+  group_by(parish_name) %>% 
+  summarise(n_obs = n()) %>% 
+  mutate(parish_name = fct_reorder(parish_name, n_obs)) %>% 
+  ggplot(aes(x = n_obs, y = parish_name, fill = parish_name)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "Number of baptisms",
+       y = NULL)
+  
+
+```
+
+
+```{r}
+df_map <- df %>% 
+  group_by(parish_name) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs)
+```
+
+### Reuse
+
+We can reuse what we created earlier and just change the size argument to n_obs.
+
+```{r}
+ggmap(CT_map) +
+    geom_point(aes(long, lat, size = n_obs), 
+               data = df_map,
+               show.legend = F) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+            vjust = 1.1,
+               data = df %>% distinct(parish_name, long, lat) %>% 
+              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                     parish_name = str_replace(parish_name, ",", "\n"))) +
+  theme_void() +
+  labs(title = "Where are our churches located?")  
+  
+```
+
+
+Leaflet map
+
+```{r}
+
+df <- df %>% 
+  # this popup will contain the parsh name in bold (<b> ... </b> makes bold) 
+  # and the address in the next line (with a <br/> break)
+  mutate(popup = glue("<b>{parish_name}</b><br/>{parish_address}"))
+
+df %>% 
+  # makes a leaflet map
+  leaflet() %>% 
+  # adds a background
+  addTiles() %>% 
+  # sets the centre of the map with the mean values of lat and long
+  setView(mean(df$long), mean(df$lat), zoom = 11) %>% 
+  # here we add a marker with the popup specified above, inclduing the name of the parish and its address.
+  addMarkers(unique(df$long), unique(df$lat), 
+             popup = unique(df$popup))
+
+```
+
+### Line chart
+
+```{r}
+df %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized) %>% 
+  ggplot(aes(year_baptized, n_obs, colour = parish_name)) +
+  geom_line() +
+  geom_point()
+```
+
+### Small multiples
+
+Key ideas = facet_wrap and remove legend with theme(legend.position = "none")
+
+```{r}
+df %>% 
+  mutate(parish_name = str_remove(parish_name, "Cape Town,")) %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized) %>% 
+  ggplot(aes(year_baptized, n_obs, colour = parish_name)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ parish_name) +
+  theme(legend.position = "none")
+
+```
+
+### Geom jitter for map over time - a fun one for LinkedIn
+
+```{r}
+df %>% 
+  mutate(parish_name = str_remove(parish_name, "Cape Town,")) %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized)
+
+
+```
+
+
+### lollipop chart with average age of each spouse by race and by parish
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  group_by(race) %>% 
+  summarise(mean_female_age = mean(female_age),
+            mean_male_age = mean(male_age)) %>% 
+  ggplot() +
+  geom_point(aes(mean_female_age, race), colour = "blue") +
+  geom_point(aes(mean_male_age, race), colour = "red") +
+  labs(x = "Mean age of spouse",
+       y = NULL,
+       title = "Average age gap between husband and wife by race")
+
+```
+
+### ggridges plot
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  group_by(race) %>% 
+  summarise(female = mean(female_age),
+            male = mean(male_age),
+            n = n()) %>% 
+  pivot_longer(c(male, female), names_to = "gender") %>% 
+  mutate(race = glue::glue("{race} - {n}"),
+         race = fct_reorder(race, n)) %>% 
+  ggplot(aes(value, race, colour = gender)) +
+  geom_point() 
+
+```
+
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  ggplot(aes(female_age, fill = race)) +
+  geom_density() +
+  facet_wrap(~ race, nrow = 3)
+
+
+df %>%
+  group_by(parish_name) %>% 
+  summarise(n = n()) %>% 
+  mutate(parish_name = fct_reorder(parish_name, n)) %>% 
+  ggplot(aes(n, parish_name, fill = parish_name)) +
+  geom_col(show.legend = F) +
+  labs(x = "Number of baptisms in sample",
+       y = NULL)
+
+```
+
+
+### Tie fighter plot
+
+### Heatmap?
+
+
