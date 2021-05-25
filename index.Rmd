@@ -390,7 +390,7 @@ df %>%
 ---
 # We may care about spatial autocorrelation
 
-We see in a zoomed in section that as we move North and towards the ethiopian highlands, the coffee rating improves.
+We see in a zoomed in section that as we move North and towards the Ethiopian highlands, the coffee rating improves.
 
 ```{r, echo=F, warning=F}
 library(rnaturalearth)

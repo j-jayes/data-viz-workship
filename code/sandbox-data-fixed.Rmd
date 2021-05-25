@@ -1,0 +1,675 @@
+---
+title: "sandbox-data"
+author: "JJayes"
+date: "19/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(glue)
+
+```
+
+## Purpose
+
+To create some summary data from the data LR sent me - I'll use this summary data in the presentation on data viz.
+
+```{r}
+df <- read_rds("data/df_clean.rds")
+
+df <- df %>% 
+  select(`Parish name`, 
+         Year_baptized, Month_baptized, Day_baptized, 
+         Christian_name, Surname_b,
+         Year_of_birth, Month_of_birth, Day_of_birth, 
+         Race, 
+         Female_age, Female_surname, Female_name, Female_country, Female_profession,
+         Male_age, Male_surname, Male_name, Male_country, Male_Profession)
+
+df <- df %>% 
+  janitor::clean_names()
+
+df <- df %>% 
+  mutate(parish_address = case_when(
+    
+    str_detect(parish_name, "Christ Church") ~ "16 Summerley Rd, Kenilworth, Cape Town, 7708, South Africa",
+    str_detect(parish_name, "St Mark") ~ "30 Bamford Ave, Athlone, Cape Town, 7760, South Africa",
+    str_detect(parish_name, "St Peter") ~ "Victoria Rd, Mowbray, Cape Town, 7700, South Africa",
+    str_detect(parish_name, "St James") ~ "St James Rd, Sea Point, Cape Town, 8005, South Africa",
+    str_detect(parish_name, "St Cyprian") ~ "2B Papu St, Langa, Cape Town, 7456, South Africa",
+    str_detect(parish_name, "Maitland") ~ "3 Fontana St, Brooklyn, Cape Town, 7405, South Africa",
+    str_detect(parish_name, "St Margaret") ~ "25 Jansen St, Cape Town, 7500, South Africa",
+    TRUE ~ " "
+  ))
+
+df %>% 
+  count(male_country, sort = T) 
+
+df %>% 
+  count(female_country, sort = T) 
+
+df %>% 
+  count(male_profession, sort = T) 
+
+df %>% 
+  count(female_profession, sort = T)
+
+df %>% distinct(parish_address)
+
+df %>% distinct(parish_name)
+
+df <- df %>% 
+  mutate(parish_name = case_when(
+    
+    str_detect(parish_name, "Christ Church") ~ "Christ Church, Kenilworth",
+    str_detect(parish_name, "St Mark") ~ "St Mark's Atholone",
+    str_detect(parish_name, "St Peter") ~ "St Peter's, Mowbray",
+    str_detect(parish_name, "St James") ~ "St James the Great, Sea Point",
+    str_detect(parish_name, "St Cyprian") ~ "St Cyprian's, Langa",
+    str_detect(parish_name, "Maitland") ~ "St Anne's, Maitland",
+    str_detect(parish_name, "St Margaret") ~ "St Margaret's, Parow",
+    TRUE ~ " "
+  ))
+
+df %>% distinct(parish_name)
+
+df %>% 
+  drop_na()
+
+df %>% count(race, surname_b, sort = T) %>% 
+  group_by(race) %>% 
+  slice_max(n, n = 5, with_ties = F) %>% 
+  ungroup() %>% view()
+
+# write_rds(df, "data/baptism_data.rds")
+
+```
+
+# Using Baptism data
+
+## Reading in data
+
+```{r}
+df <- read_rds("data/baptism_data.rds")
+
+skimr::skim(df)
+```
+
+## Counts
+
+```{r}
+df %>% 
+  count(parish_name, sort = T)
+
+df %>% 
+  count(year_of_birth, sort = T)
+
+df %>% 
+  count(year_baptized, sort = T)
+
+```
+
+## Lines
+
+```{r}
+
+df %>% 
+  group_by(year_baptized, parish_name) %>% 
+  mutate(number_of_baptisms = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year_baptized, y = number_of_baptisms, colour = parish_name)) +
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(x = NULL,
+       y = "Number of baptisms per year")
+
+```
+
+```{r}
+df %>% 
+  group_by(year_baptized) %>% 
+  mutate(number_of_baptisms = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year_baptized, y = number_of_baptisms)) +
+  geom_line() +
+  facet_wrap(~ parish_name)
+```
+
+
+## Density of baptisms by day of the week
+
+```{r}
+df %>% 
+  count()
+
+```
+
+
+
+### Map
+
+How to use tidy geocoder
+
+```{r}
+library(tidygeocoder)
+
+# locations <- df %>%
+#   select(parish_address) %>%
+#   distinct() %>%
+#   tidygeocoder::geocode(address = parish_address,
+#           method = "osm")
+# 
+# write_rds(locations, "data/locations.rds")
+
+locations <- read_rds("data/locations.rds")
+
+df <- df %>% 
+  inner_join(locations, by = "parish_address")
+
+locations %>% 
+  ggplot(aes(long, lat, label = parish_address)) +
+  geom_point() +
+  geom_text()
+```
+
+### Basic map with topography
+
+```{r}
+library(ggmap)
+locations %>% 
+  skimr::skim()
+
+# create boudning box for map image
+b_box <- c(left = 18.35, bottom = -34.02, right = 18.65, top = -33.85)
+
+# create map
+CT_map <- get_map(b_box, zoom = 11)
+```
+
+### Nice!
+
+```{r}
+ggmap(CT_map) +
+    geom_point(aes(long, lat), 
+               data = locations) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+               data = df %>% distinct(parish_name, long, lat))
+
+```
+
+### What can we fix?
+
+```{r}
+
+p <- ggmap(CT_map) +
+    geom_point(aes(long, lat), 
+               data = locations,
+               size = 3,
+               show.legend = F) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+            vjust = 1.1,
+               data = df %>% distinct(parish_name, long, lat) %>% 
+              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                     parish_name = str_replace(parish_name, ",", "\n"))) +
+  theme_void() +
+  labs(title = "Where are our churches located?")
+
+# write_rds(p, "data/map_of_churches.rds")
+```
+
+### Can we add more meaningful information to the plot?
+
+- How many observations are there per church?
+
+```{r}
+
+df %>% 
+  group_by(parish_name) %>% 
+  summarise(n_obs = n()) %>% 
+  arrange(desc(n_obs))
+
+df %>% 
+  group_by(parish_name) %>% 
+  summarise(n_obs = n()) %>% 
+  mutate(parish_name = fct_reorder(parish_name, n_obs)) %>% 
+  ggplot(aes(x = n_obs, y = parish_name, fill = parish_name)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(x = n_obs, y = parish_name, label = n_obs), hjust = -.2) +
+  scale_fill_brewer(palette = "Dark2") +
+  expand_limits(x = 850) +
+  labs(x = "Number of baptisms",
+       y = NULL) +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank())
+  
+
+```
+
+
+```{r}
+df_map <- df %>% 
+  group_by(parish_name) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs)
+```
+
+### Reuse
+
+We can reuse what we created earlier and just change the size argument to n_obs.
+
+```{r}
+ggmap(CT_map) +
+    geom_point(aes(long, lat, size = n_obs), 
+               data = df_map,
+               show.legend = F) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+            vjust = 1.1,
+               data = df %>% distinct(parish_name, long, lat) %>% 
+              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                     parish_name = str_replace(parish_name, ",", "\n"))) +
+  theme_void() +
+  labs(title = "Where are our churches located?")  
+  
+```
+
+
+Leaflet map
+
+```{r}
+
+df <- df %>% 
+  # this popup will contain the parsh name in bold (<b> ... </b> makes bold) 
+  # and the address in the next line (with a <br/> break)
+  mutate(popup = glue("<b>{parish_name}</b><br/>{parish_address}"))
+
+df %>% 
+  # makes a leaflet map
+  leaflet() %>% 
+  # adds a background
+  addTiles() %>% 
+  # sets the centre of the map with the mean values of lat and long
+  setView(mean(df$long), mean(df$lat), zoom = 11) %>% 
+  # here we add a marker with the popup specified above, inclduing the name of the parish and its address.
+  addMarkers(unique(df$long), unique(df$lat), 
+             popup = unique(df$popup))
+
+```
+
+
+
+### Line chart
+
+```{r}
+df %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized) %>% 
+  ggplot(aes(year_baptized, n_obs, colour = parish_name)) +
+  geom_line() +
+  geom_point()
+```
+
+### Small multiples
+
+Key ideas = facet_wrap and remove legend with theme(legend.position = "none")
+
+```{r}
+df %>% 
+  mutate(parish_name = str_remove(parish_name, "Cape Town,")) %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized) %>% 
+  ggplot(aes(year_baptized, n_obs, colour = parish_name)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ parish_name) +
+  theme(legend.position = "none")
+
+```
+
+### Geom jitter for map over time - a fun one for LinkedIn!
+
+```{r}
+df %>% 
+  mutate(parish_name = str_remove(parish_name, "Cape Town,")) %>% 
+  group_by(parish_name) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  select(parish_name, lat, long, n_obs) %>% 
+  ggplot(aes(long, lat)) +
+  geom_jitter(width = .01,
+              height = .01)
+
+df %>% 
+  mutate(parish_name = str_remove(parish_name, "Cape Town,")) %>% 
+  group_by(parish_name, year_baptized) %>% 
+  mutate(n_obs = n()) %>% 
+  ungroup() %>% 
+  distinct(parish_name, lat, long, n_obs, year_baptized)
+
+
+```
+
+
+### lollipop chart with average age of each spouse by race and by parish
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  group_by(race) %>% 
+  summarise(mean_female_age = mean(female_age),
+            mean_male_age = mean(male_age)) %>% 
+  ggplot() +
+  geom_point(aes(mean_female_age, race), colour = "blue") +
+  geom_point(aes(mean_male_age, race), colour = "red") +
+  labs(x = "Mean age of spouse",
+       y = NULL,
+       title = "Average age gap between husband and wife by race")
+
+```
+
+### ggridges plot
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  group_by(race) %>% 
+  summarise(female = mean(female_age),
+            male = mean(male_age),
+            n = n()) %>% 
+  pivot_longer(c(male, female), names_to = "gender") %>% 
+  mutate(race = glue::glue("{race} - {n}"),
+         race = fct_reorder(race, n)) %>% 
+  ggplot(aes(value, race, colour = gender)) +
+  geom_point() 
+
+```
+
+
+```{r}
+
+df %>% 
+  filter(!is.na(female_age),
+         !is.na(male_age)) %>% 
+  ggplot(aes(female_age, fill = race)) +
+  geom_density() +
+  facet_wrap(~ race, nrow = 3)
+
+
+df %>%
+  group_by(parish_name) %>% 
+  summarise(n = n()) %>% 
+  mutate(parish_name = fct_reorder(parish_name, n)) %>% 
+  ggplot(aes(n, parish_name, fill = parish_name)) +
+  geom_col(show.legend = F) +
+  labs(x = "Number of baptisms in sample",
+       y = NULL)
+
+```
+
+### Time on a different axis - shows evolution over time.
+
+- skimr skim
+- points
+- lines
+- arrows
+- labels for year with modulo operator
+- scale colour manual with colour picker.
+- colour of labels with 'colour = "black"'
+
+```{r}
+df <- read_rds("data/df_clean_for_export.rds")
+
+
+df_time <- df %>% 
+  filter(country %in% c("Denmark", "Greece"),
+         indicator %in% c("Total fertility rate", "Proportion of live births outside marriage")) %>% 
+  pivot_wider(names_from = indicator) %>% 
+  rename(tfr = `Total fertility rate`, 
+         pbom = `Proportion of live births outside marriage`) %>% 
+  select(-flag)
+
+
+
+df_time %>% 
+  mutate(year_flag = ifelse(test = year %% 7 == 0, 
+                            yes = year, 
+                            no = NA)) %>% 
+  ggplot(aes(tfr, pbom, colour = country, label = year_flag)) +
+  geom_point() +
+  geom_segment(aes(x= tfr, 
+                   y= pbom,
+                   xend=c(tail(tfr, n=-1), NA), 
+                   yend=c(tail(pbom, n=-1), NA)),
+               arrow = arrow(length=unit(0.25,"cm"))) +
+  geom_text_repel(colour = "black")
+
+
+```
+
+## gghighlight build up
+
+```{r}
+df <- read_rds("data/df_clean_for_export.rds")
+
+df <- df %>% 
+  filter(indicator %in% c("Proportion of live births outside marriage")) %>% 
+  pivot_wider(names_from = indicator) %>% 
+  rename(pbom = `Proportion of live births outside marriage`)
+
+# write_rds(df, "data/births_outside_marriage.rds")
+
+df <- read_rds("data/births_outside_marriage.rds")
+  
+df %>%   
+  filter(flag == 1) %>% 
+  ggplot(aes(x = year, y = pbom, group = country, colour = country)) +
+  geom_line() +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+
+```
+
+### Average
+
+```{r}
+df %>% 
+  group_by(year) %>% 
+  mutate(mean_pbom = mean(pbom, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, group = country, colour = country), 
+            data = df %>% filter(flag == 1)) +
+  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+
+
+```
+
+### Geom ribbon
+
+```{r}
+df %>% 
+  group_by(year) %>% 
+  mutate(mean_pbom = mean(pbom, na.rm = T),
+         pct_10 = quantile(pbom, .1, na.rm = T),
+         pct_90 = quantile(pbom, .9, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, group = country, colour = country), 
+            data = df %>% filter(flag == 1)) +
+  geom_ribbon(aes(x = year, ymin = pct_10, ymax = pct_90, 
+                  fill = "10th to 90th\npercentile interval\nfor Europen countries"), alpha = .3) +
+  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  scale_fill_manual(values = "#90ee90") +
+  guides(fill = guide_legend(order = 2),
+         col = guide_legend(order = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country",
+       fill = "")
+
+```
+
+### gghighlight
+
+```{r}
+library(gghighlight)
+
+df %>%   
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, colour = country)) +
+  gghighlight(flag == 1) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  theme(legend.text = element_text(size = 4),
+        legend.position = "bottom",
+        legend.title = element_markdown()) +
+  scale_colour_manual(values = c("#C60C30", "#0D5EAF")) +
+  labs(title = "Proportion of births outside of marriage in <span style='color:#C60C30'>Denmark</span> and <span style='color:#0D5EAF'>Greece</span>",
+       y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+
+```
+
+
+### Tie fighter plot
+
+### Heatmap?
+
+
+## Mapping coffee across the world
+
+### Coffee ratings data prep
+
+```{r}
+coffee_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-07/coffee_ratings.csv')
+
+coffee_ratings <- coffee_ratings %>% as_tibble()
+
+coffee_ratings <- coffee_ratings %>% 
+  mutate(country_code = countrycode::countrycode(coffee_ratings$country_of_origin, origin = "country.name", destination = "iso3c"),
+         iso_a3 = country_code)
+
+coffee_ratings <- coffee_ratings %>% 
+  group_by(country_code, species) %>% 
+  mutate(mean_country_rating = mean(total_cup_points)) %>% 
+  ungroup() %>% 
+  distinct(iso_a3, mean_country_rating, species, .keep_all = T)
+
+p_load(rnaturalearth, rnaturalearthdata, rgeos)
+
+world <- ne_countries(scale = "small", returnclass = "sf")
+
+world_df <- inner_join(coffee_ratings, world, by = "iso_a3")
+
+world_df <- world_df %>% 
+  select(geometry, iso_a3, mean_country_rating, species, region_un) %>% 
+  drop_na()
+
+# write_rds(world_df, "data/coffee_data.rds")
+```
+
+## Coffee map
+
+```{r}
+ggplot(data = world_df) +
+  borders() +
+  geom_sf(aes(fill = mean_country_rating, geometry = geometry)) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  coord_sf(ylim = c(-50, 80)) +
+  facet_wrap(~ species, nrow = 2) +
+  labs(title = "Average Coffee Rating",
+       subtitle = "By country and species",
+       fill = "Average Rating / 100",
+       caption = "Data: James LeDoux - https://github.com/jldbc/coffee-quality-database",
+       x = "",
+       y = "")
+
+```
+
+### Coffee columns
+
+```{r}
+library(tidytext)
+
+world_df %>% 
+  mutate(country_name = countrycode::countrycode(iso_a3, "iso3c", "country.name")) %>%
+  mutate(country_name = reorder_within(country_name, mean_country_rating, species)) %>% 
+  group_by(species) %>% 
+  slice_max(mean_country_rating, n = 10) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = mean_country_rating, y = country_name, fill = region_un)) +
+  geom_col() +
+  facet_wrap(~ species, scales = "free") +
+  scale_y_reordered() +
+  coord_cartesian(xlim = c(70, 90)) +
+  labs(x = "Mean coffee rating",
+       y = NULL,
+       fill = "Region")
+
+```
+
+### map of tiles
+
+```{r}
+df <- read.csv("data/worldtilegrid.txt")
+
+df <- df %>% as_tibble() %>% mutate(y = abs(y-23)) 
+
+df <- df %>% 
+  rename(iso_a3 = alpha.3) %>% 
+  left_join(coffee_ratings %>% 
+              filter(species == "Arabica") %>% 
+              select(iso_a3, mean_country_rating), by = "iso_a3")
+
+# write_rds(df, "data/coffee_map_tiles.rds")
+
+df %>% 
+  ggplot(aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1)) +
+  geom_rect(color = "#ffffff") +
+  geom_rect(color = "#ffffff", aes(fill = mean_country_rating)) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  geom_text(aes(x = x, y = y, label = alpha.2), color = "#ffffff", 
+              alpha = 0.5, nudge_x = 0.5, nudge_y = 0.5, size = 3) +
+  theme(panel.grid = element_blank()) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  coord_equal() +
+  labs(fill = "Average Arabica coffee rating by country")
+
+```
+
+```{r}
+df %>% 
+
+  ggplot(aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1)) +
+  geom_rect(color = "#ffffff") +
+    geom_text(aes(x = x, y = y, label = alpha.2), color = "#ffffff", 
+              alpha = 0.5, nudge_x = 0.5, nudge_y = 0.5, size = 3) +
+  theme(panel.grid = element_blank()) +
+  theme_void()
+
+```
+
