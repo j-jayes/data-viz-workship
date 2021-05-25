@@ -20,8 +20,14 @@ background-image: url(images/LEAP_logo.png)
 ```{r setup, include=FALSE}
 options(htmltools.dir.version = FALSE)
 
+knitr::opts_chunk$set(message = F, warning = F)
+
 library(pacman)
-p_load(tidyverse, xaringan, xaringanExtra)
+p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext)
+
+# ggplot2 settings so plots scale well for slide size 
+theme_set(theme_light(16)) # 16 for full width, 18 for half width 
+update_geom_defaults("point", list(size = 2.0)) # 2 for full width, 2.5 for half width
 
 ```
 ---
@@ -98,7 +104,7 @@ class: center, top
 
 
 ---
-# You want to make...
+# You want to learn about your data by
 
 ```{r, echo = F}
 xaringanExtra::use_panelset()
@@ -107,32 +113,43 @@ style_panelset_tabs(foreground = "honeydew", background = "seagreen")
 ```
 
 .panelset[
-.panel[.panel-name[a map?]
-
-![](images/sa-hex-map.png)
-
-```{r panel-chunk, fig.show='hide'}
-
-
-```
-]
-
-.panel[.panel-name[Plot]
+.panel[.panel-name[Counting things]
 
 ```{r}
-# df %>% 
-#   filter(!is.na(female_age),
-#          !is.na(male_age)) %>% 
-#   group_by(race) %>% 
-#   summarise(female = mean(female_age),
-#             male = mean(male_age),
-#             n = n()) %>% 
-#   pivot_longer(c(male, female), names_to = "gender") %>% 
-#   mutate(race = glue::glue("{race} - {n}"),
-#          race = fct_reorder(race, n)) %>% 
-#   ggplot(aes(value, race, colour = gender)) +
-#   geom_point() 
+df <- read_rds("data/baptism_data.rds")
 
+df %>% 
+  count(female_profession, sort = T)
+```
+
+
+]
+
+.panel[.panel-name[Drawing maps]
+
+```{r, echo=F, warning=F, message=F, fig.width = 8, fig.asp = 0.618, dev = "svg", fig.align='center'}
+p <- read_rds("data/map_of_churches.rds")
+p
+```
+
+]
+
+.panel[.panel-name[Making plots]
+
+```{r, echo = F, warning=F, message=F, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+df %>% 
+  group_by(parish_name) %>% 
+  summarise(n_obs = n()) %>% 
+  mutate(parish_name = fct_reorder(parish_name, n_obs)) %>% 
+  ggplot(aes(x = n_obs, y = parish_name, fill = parish_name)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(x = n_obs, y = parish_name, label = n_obs), hjust = -.2) +
+  scale_fill_brewer(palette = "Dark2") +
+  expand_limits(x = 850) +
+  labs(x = "Number of baptisms",
+       y = NULL) +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank())
 ```
 
 
@@ -141,7 +158,42 @@ style_panelset_tabs(foreground = "honeydew", background = "seagreen")
 
 
 ---
+# You want to make beautiful charts with
 
+.panelset[
+.panel[.panel-name[Informative colours]
+
+```{r, echo=F, warning=F, message=F}
+s <- read_rds("data/map_of_africa_colour.rds")
+s
+```
+
+
+]
+
+.panel[.panel-name[Interactive elements]
+
+```{r, echo=F, fig.align='center'}
+int_fig <- read_rds("data/interactive_fig.rds")
+int_fig
+```
+
+
+]
+
+.panel[.panel-name[Engaging animations]
+
+<center>
+
+<iframe width="540" height="540" src="https://www.youtube.com/embed/D_Aakjiadm4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+</center>
+
+]
+]
+
+
+---
 # Tips and Tricks
 
 ### Back to the suggested Excel Chart
@@ -151,7 +203,54 @@ style_panelset_tabs(foreground = "honeydew", background = "seagreen")
 ---
 # Advantages of R
 
-If you're an economist:
+### Workflow
+
+With other software, your workflow is separated between different applications and windows:
+
+.pull-left[
+
+![Stata](images/stata.png)
+
+]
+
+.pull-right[
+
+![Excel and Word](images/excel-word.png)
+
+]
+
+---
+
+# Advantages of R
+
+## Rstudio lets you do all your work in one place
+
+```{r, echo=FALSE, out.width="80%", fig.align = 'center'}
+knitr::include_graphics("images/rstudio.png")
+```
+
+---
+# Advantages of R
+
+## Export your R work to any number of formats
+
+```{r, echo=FALSE, out.width="90%", fig.align = 'center'}
+knitr::include_graphics("images/rmarkdown.png")
+```
+
+
+---
+
+# Advantages of R
+
+## Programatic updating
+
+
+
+---
+# Advantages of R
+
+### If you're an economist:
 --
 
 - You're likely to want do do a DiD at some point.
@@ -171,574 +270,603 @@ For example:
 ![](images/did-pedro.PNG)
 
 ---
+### Colour
 
-# 
 
-# Using R
---
+---
+# Making maps
 
-You are recommended to use the [RStudio IDE](https://www.rstudio.com/products/rstudio/), but you do not have to.
+Contextual maps.
 
-- Create a new R Markdown document from the menu `File -> New File -> R Markdown -> From Template -> Ninja Presentation`;<sup>1</sup>
+Chloropleths.
 
---
+Animated maps.
 
-- Click the `Knit` button to compile it;
+---
+# Coffee rating map
 
---
+.panelset[
+.panel[.panel-name[Plot]
 
-- or use the [RStudio Addin](https://rstudio.github.io/rstudioaddins/)<sup>2</sup> "Infinite Moon Reader" to live preview the slides (every time you update and save the Rmd document, the slides will be automatically reloaded in RStudio Viewer.
+```{r, coffee-map-demo-0-out, ref.label="coffee-map-demo-0", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
 
-.footnote[
-[1] 中文用户请看[这份教程](https://slides.yihui.org/xaringan/zh-CN.html)
+```
 
-[2] See [#2](https://github.com/yihui/xaringan/issues/2) if you do not see the template or addin in RStudio.
+]
+
+.panel[.panel-name[Code]
+
+```{r coffee-map-demo-0, warning=F, eval=F}
+df <- read_rds("data/coffee_data.rds")
+
+ggplot(data = df) +
+  borders() +
+  geom_sf(aes(fill = mean_country_rating, geometry = geometry)) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  coord_sf(ylim = c(-50, 80)) +
+  facet_wrap(~ species, nrow = 2) +
+  labs(title = "Average Coffee Rating",
+       subtitle = "By country and species",
+       fill = "Average Rating / 100",
+       caption = "Data: James LeDoux - https://github.com/jldbc/coffee-quality-database",
+       x = "",
+       y = "")
+
+```
+
+]
 ]
 
 ---
-background-image: url(`r xaringan:::karl`)
-background-position: 50% 50%
-class: center, bottom, inverse
+# What are the problems with this map?
 
-# You only live once!
+--
 
----
+- Lots of missing data
 
-# Hello Ninja
+--
 
-As a presentation ninja, you certainly should not be satisfied by the "Hello World" example. You need to understand more about two things:
+- Only some countries produce coffee, very few produce Robusta beans
 
-1. The [remark.js](https://remarkjs.com) library;
+--
 
-1. The **xaringan** package;
-
-Basically **xaringan** injected the chakra of R Markdown (minus Pandoc) into **remark.js**. The slides are rendered by remark.js in the web browser, and the Markdown source needed by remark.js is generated from R Markdown (**knitr**).
+- **Crucially, we cannot see the countries with small land area**
 
 ---
+# What shall we do about this?
 
-# remark.js
+.panelset[
+.panel[.panel-name[Plot]
 
-You can see an introduction of remark.js from [its homepage](https://remarkjs.com). You should read the [remark.js Wiki](https://github.com/gnab/remark/wiki) at least once to know how to
+```{r, coffee-map-demo-1-out, ref.label="coffee-map-demo-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
 
-- create a new slide (Markdown syntax<sup>*</sup> and slide properties);
-
-- format a slide (e.g. text alignment);
-
-- configure the slideshow;
-
-- and use the presentation (keyboard shortcuts).
-
-It is important to be familiar with remark.js before you can understand the options in **xaringan**.
-
-.footnote[[*] It is different with Pandoc's Markdown! It is limited but should be enough for presentation purposes. Come on... You do not need a slide for the Table of Contents! Well, the Markdown support in remark.js [may be improved](https://github.com/gnab/remark/issues/142) in the future.]
-
----
-background-image: url(`r xaringan:::karl`)
-background-size: cover
-class: center, bottom, inverse
-
-# I was so happy to have discovered remark.js!
-
----
-class: inverse, middle, center
-
-# Using xaringan
-
----
-
-# xaringan
-
-Provides an R Markdown output format `xaringan::moon_reader` as a wrapper for remark.js, and you can use it in the YAML metadata, e.g.
-
-```yaml
----
-title: "A Cool Presentation"
-output:
-  xaringan::moon_reader:
-    yolo: true
-    nature:
-      autoplay: 30000
----
 ```
 
-See the help page `?xaringan::moon_reader` for all possible options that you can use.
+]
+
+.panel[.panel-name[Code]
+
+```{r coffee-map-demo-1, warning=F, eval=F}
+library(tidytext)
+
+df %>% 
+  select(-geometry) %>% 
+  mutate(country_name = countrycode::countrycode(iso_a3, "iso3c", "country.name")) %>%
+  mutate(country_name = reorder_within(country_name, mean_country_rating, species)) %>% 
+  group_by(species) %>% 
+  slice_max(mean_country_rating, n = 10) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = mean_country_rating, y = country_name, fill = region_un)) +
+  geom_col() +
+  facet_wrap(~ species, scales = "free") +
+  scale_y_reordered() +
+  coord_cartesian(xlim = c(70, 90)) +
+  labs(x = "Mean coffee rating",
+       y = NULL,
+       fill = "Region")
+
+```
+
+]
+]
+
+---
+# The trusty column chart gets us some of the way there
+
+--
+
+- We still have some information about the geography of the countries that produce the best coffee
+
+--
+
+- The chart is very legible and the comparisons are clear
+
+--
+
+- But, we have lost the effect of latitude that we saw in Africa.
+
+---
+# We may care about spatial autocorrelation
+
+We see in a zoomed in section that as we move North and towards the ethiopian highlands, the coffee rating improves.
+
+```{r, echo=F, warning=F}
+library(rnaturalearth)
+library(ggiraph)
+
+q <- ggplot(data = df %>% filter(species == "Arabica", region_un == "Africa")) +
+  borders() +
+  geom_sf(aes(fill = mean_country_rating, geometry = geometry)) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  theme_void() +
+  theme(legend.position = "right") +
+  coord_sf(ylim = c(-25, 20),
+           xlim = c(-20,50)) +
+  labs(title = "Average Arabica coffee rating by country",
+       fill = "Average Rating / 100",
+       caption = "Data: James LeDoux - https://github.com/jldbc/coffee-quality-database",
+       x = "",
+       y = "")
+
+r <- girafe(
+  ggobj = q,
+  width_svg = 8,
+  height_svg = 6,
+  )
+
+r
+
+```
 
 ---
 
-# remark.js vs xaringan
+class: inverse, center, middle
 
-Some differences between using remark.js (left) and using **xaringan** (right):
+# How can we show this on a map?
+
+--
+
+## Represent each country with the same size
+
+### And arrange the countries in 'roughly' the correct place geographically
+
+---
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r coffee-map-demo-2-out, ref.label="coffee-map-demo-2", echo=FALSE, warning=FALSE, fig.width = 9, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r coffee-map-demo-2, eval = F, warning=F}
+df <- read_rds("data/coffee_map_tiles.rds")
+
+df %>% 
+  ggplot(aes(xmin = x, ymin = y, xmax = x + 1, ymax = y + 1)) +
+  geom_rect(color = "#ffffff") +
+  geom_rect(color = "#ffffff", aes(fill = mean_country_rating)) +
+  scale_fill_viridis_c(trans = "sqrt") +
+  geom_text(aes(x = x, y = y, label = alpha.2), color = "#ffffff", 
+              alpha = 0.5, nudge_x = 0.5, nudge_y = 0.5, size = 2.8) +
+  theme(panel.grid = element_blank()) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  coord_equal() +
+  labs(fill = "Average Arabica coffee rating by country")
+
+```
+
+]
+]
+
+---
+
+# What have we improved?
 
 .pull-left[
-1. Start with a boilerplate HTML file;
 
-1. Plain Markdown;
+```{r coffee-map-demo-2-out-small, ref.label="coffee-map-demo-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.1, dev = "svg"}
 
-1. Write JavaScript to autoplay slides;
+```
 
-1. Manually configure MathJax;
-
-1. Highlight code with `*`;
-
-1. Edit Markdown source and refresh browser to see updated slides;
 ]
 
 .pull-right[
-1. Start with an R Markdown document;
 
-1. R Markdown (can embed R/other code chunks);
+- We can see the spatial correlation in Africa
 
-1. Provide an option `autoplay`;
+- Geographically small countries are not forgotten
 
-1. MathJax just works;<sup>*</sup>
+- Comparing countries is not difficult with the diverging colour scale
 
-1. Highlight code with `{{}}`;
-
-1. The RStudio addin "Infinite Moon Reader" automatically refreshes slides on changes;
 ]
 
-.footnote[[*] Not really. See next page.]
-
 ---
+# Time on a third axis
 
-# Math Expressions
+Sometimes it is interesting to show an evolution of two variables over time. 
 
-You can write LaTeX math expressions inside a pair of dollar signs, e.g. &#36;\alpha+\beta$ renders $\alpha+\beta$. You can use the display style with double dollar signs:
+For example, say we have information on fertility rates and the share of children born outside of marriage in Europe.
 
-```
-$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
-```
+The data looks like this:
+```{r, echo=T}
+df <- read.csv("data/df_denmark_greece.csv") %>% as_tibble()
 
-$$\bar{X}=\frac{1}{n}\sum_{i=1}^nX_i$$
-
-Limitations:
-
-1. The source code of a LaTeX math expression must be in one line, unless it is inside a pair of double dollar signs, in which case the starting `$$` must appear in the very beginning of a line, followed immediately by a non-space character, and the ending `$$` must be at the end of a line, led by a non-space character;
-
-1. There should not be spaces after the opening `$` or before the closing `$`.
-
-1. Math does not work on the title slide (see [#61](https://github.com/yihui/xaringan/issues/61) for a workaround).
-
----
-
-# R Code
-
-```{r comment='#'}
-# a boring regression
-fit = lm(dist ~ 1 + speed, data = cars)
-coef(summary(fit))
-dojutsu = c('地爆天星', '天照', '加具土命', '神威', '須佐能乎', '無限月読')
-grep('天', dojutsu, value = TRUE)
+df %>% head()
 ```
 
 ---
 
-# R Plots
+## The obvious choice is a line chart
 
-```{r cars, fig.height=4, dev='svg'}
-par(mar = c(4, 4, 1, .1))
-plot(cars, pch = 19, col = 'darkgray', las = 1)
-abline(fit, lwd = 2)
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r, greece-denmark-demo-0-out, ref.label="greece-denmark-demo-0", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
 ```
+
+
+]
+
+.panel[.panel-name[Code]
+
+```{r greece-denmark-demo-0, warning=F, eval=F}
+df %>% 
+  # gives meaningful variable names
+  rename(`Total fertility rate` = tfr,
+         `Proportion of births outside marriage` = pbom) %>% 
+  # makes it into a longer dataset so that we can facet 
+  # wrap by indicator
+  pivot_longer(-c(country, year), names_to = "indicator") %>% 
+  ggplot(aes(year, value, colour = country)) +
+  # here we say nrow = 2 so that they are above one another
+  facet_wrap(~ indicator, nrow = 2, scales = "free_y") +
+  geom_line() +
+  # remove unnecessary axis labels
+  labs(y = NULL,
+       x = "Year",
+       colour = "Country") +
+  theme(legend.position = "right")
+
+```
+
+]
+]
+
+---
+### An alternative
+.panelset[
+.panel[.panel-name[Plot]
+```{r greece-denmark-demo-1-out, ref.label="greece-denmark-demo-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-demo-1, eval = F}
+
+df %>% 
+  mutate(year_flag = ifelse(test = year %% 7 == 0, 
+                            yes = year, 
+                            no = NA)) %>% 
+  ggplot(aes(tfr, pbom, colour = country, label = year_flag)) +
+  geom_point() +
+  geom_segment(aes(x= tfr, 
+                   y= pbom,
+                   xend=c(tail(tfr, n=-1), NA), 
+                   yend=c(tail(pbom, n=-1), NA)),
+               arrow = arrow(length=unit(0.25,"cm"))) +
+  geom_text_repel(colour = "black") +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  scale_colour_manual(values = c("#C60C30", "#0D5EAF")) +
+  labs(x = "Total fertility rate",
+       y = "Proportion of births\noutside of marriage",
+       title = "Fertility vs births outside of marriage 
+       in <span style='color:#C60C30'>Denmark</span> and 
+       <span style='color:#0D5EAF'>Greece</span>") +
+  theme(legend.position = "none",
+        plot.title = element_markdown(size = 18))
+
+```
+
+
+]
+]
 
 ---
 
-# Tables
+## What have we learned?
 
-If you want to generate a table, make sure it is in the HTML format (instead of Markdown or other formats), e.g.,
+.pull-left[
+
+```{r greece-denmark-demo-1-out-small, ref.label="greece-denmark-demo-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
+
+```
+
+]
+
+.pull-right[
+
+- Both countries saw a large drop in fertility from the 1960s until the 1980s
+
+- In Denmark, after 1970 we see an increase in the share of children born outside of marriage
+
+- In contrast, Greek families have relatively few children outside of marriage.
+
+- After 1990, Danish fertility increased from 1.3 to 1.8, while Greek fertility remained at 'lowest-low' levels, below replacement.
+]
+
+---
+
+## What have we changed?
+
+.pull-left[
+
+```{r greece-denmark-demo-1-out-comparison, ref.label="greece-denmark-demo-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
+
+```
+
+]
+
+.pull-right[
+
+- Indicators on the x- and y-axis and then show time with text labels
+
+- Legend is replaced with colour coded title
+
+- Colours have meaning (main colour of country flag)
+
+- Percentage labels on the y-axis
+
+]
+
+---
+# Giving context with colour
+
+## Sometimes we may want to show a particular series of data in its correct context. 
+
+### For instance, in our line graph above which showed the evoltuion of the share of births outside of marriage in **Denmark and Greece**, we might want to know if these two represent the **extremes** within Europe.
+
+---
+## Do **Denmark and Greece** represent the **extremes** of the share of children born outside of marriage in Europe?
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r greece-denmark-marriage-demo-0-out, ref.label="greece-denmark-marriage-demo-0", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-marriage-demo-0, eval = F}
+df <- read_rds("data/births_outside_marriage.rds")
+  
+df %>%   
+  filter(flag == 1) %>% 
+  ggplot(aes(x = year, y = pbom, group = country, colour = country)) +
+  geom_line() +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+```
+
+
+]
+]
+
+---
+### One way to do this would be to show an average and then how these compare
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r greece-denmark-marriage-demo-1-out, ref.label="greece-denmark-marriage-demo-1", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-marriage-demo-1, eval = F}
+df %>% 
+  group_by(year) %>% 
+  mutate(mean_pbom = mean(pbom, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, group = country, colour = country), 
+            data = df %>% filter(flag == 1)) +
+  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+```
+
+
+]
+]
+
+---
+### We can improve upon this by introducing an interval ribbon
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r greece-denmark-marriage-demo-2-out, ref.label="greece-denmark-marriage-demo-2", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-marriage-demo-2, eval = F}
+df %>% 
+  group_by(year) %>% 
+  mutate(mean_pbom = mean(pbom, na.rm = T),
+         pct_10 = quantile(pbom, .1, na.rm = T), #<<
+         pct_90 = quantile(pbom, .9, na.rm = T)) %>% #<< 
+  ungroup() %>% 
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, group = country, colour = country), 
+            data = df %>% filter(flag == 1)) +
+  geom_ribbon(aes(x = year, ymin = pct_10, ymax = pct_90, #<<
+                  fill = "Interval \n(10th to 90th percentile)"), alpha = .3) + #<<
+  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  scale_fill_manual(values = "#90ee90") + #<<
+  guides(fill = guide_legend(order = 2), #<<
+         col = guide_legend(order = 1)) + #<<
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country",
+       fill = "") #<<
+```
+
+
+]
+]
+
+---
+### An alternative improvement shows the series for each country
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r greece-denmark-marriage-demo-3-out, ref.label="greece-denmark-marriage-demo-3", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-marriage-demo-3, eval = F}
+df %>%   
+  ggplot(aes(x = year, y = pbom, group = country, colour = country)) +
+  geom_line() +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  labs(y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country") +
+  theme(legend.text = element_text(size = 4),
+        axis.title = element_text(size = 8),
+        legend.position = "bottom")
+```
+
+
+]
+]
+
+
+---
+
+class: center, middle, inverse
+
+# This is silly
+
+--
+
+## The legend is gigantic
+
+## There are far too many colours
+
+## We cannot see Denmark or Greece
+
+---
+### We can **highlight** the counties we are interested in
+And gray out the other lines
+.panelset[
+.panel[.panel-name[Plot]
+
+```{r greece-denmark-marriage-demo-4-out, ref.label="greece-denmark-marriage-demo-4", echo=FALSE, warning=FALSE, message=F, fig.width = 7, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+
+```{r greece-denmark-marriage-demo-4, eval = F}
+library(gghighlight)
+
+df %>%   
+  ggplot() +
+  geom_line(aes(x = year, y = pbom, colour = country)) +
+  gghighlight(flag == 1) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  theme(legend.text = element_text(size = 4),
+        legend.position = "bottom",
+        plot.title = element_markdown(size = 14)) +
+  scale_colour_manual(values = c("#C60C30", "#0D5EAF")) +
+  labs(title = "Proportion of births outside of marriage in <span style='color:#C60C30'>Denmark</span> and <span style='color:#0D5EAF'>Greece</span>",
+       y = "Proportion of births\noutside of marriage",
+       x = NULL,
+       colour = "Country")
+```
+
+]
+]
+---
+# Advantages of gghighlight
+
+.pull-left[
+```{r greece-denmark-marriage-demo-4-out-small, ref.label="greece-denmark-marriage-demo-4", echo=FALSE, warning=FALSE, message=F, fig.width = 7, fig.asp = 1.3, dev = "svg"}
+
+```
+
+
+]
+
+.pull-right[
+
+- Shows each of the series
+
+- Makes clear which countries you are interested in
+
+- Does not hide outliers
+
+- A good complement to a ribbon showing the 10th to 90th perceintile interval
+
+]
+
+---
+# Interactivity
+
+Publishing your research on the web is a good way to get it out there. Making your visualizations interactive is a fantastic way to have your readers explore the story you tell.
+
+---
+# Economic history data example
+
+We're going to go from importing the data to making one polished plot.
+
+---
+
+# Importing data into R
+
+## Skimr::skim()
 
 ```{r}
-knitr::kable(head(iris), format = 'html')
+# df <- read_rds("data/")
 ```
 
----
-
-# HTML Widgets
-
-I have not thoroughly tested HTML widgets against **xaringan**. Some may work well, and some may not. It is a little tricky.
-
-Similarly, the Shiny mode (`runtime: shiny`) does not work. I might get these issues fixed in the future, but these are not of high priority to me. I never turn my presentation into a Shiny app. When I need to demonstrate more complicated examples, I just launch them separately. It is convenient to share slides with other people when they are plain HTML/JS applications.
-
-See the next page for two HTML widgets.
-
----
-
-```{r out.width='100%', fig.height=6, eval=require('leaflet')}
-library(leaflet)
-leaflet() %>% addTiles() %>% setView(9.9158, 51.5413, zoom = 17)
-```
-
----
-
-```{r eval=require('DT'), tidy=FALSE}
-DT::datatable(
-  head(iris, 10),
-  fillContainer = FALSE, options = list(pageLength = 8)
-)
-```
-
----
-
-# Some Tips
-
-- Do not forget to try the `yolo` option of `xaringan::moon_reader`.
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        yolo: true
-    ```
-
----
-
-# Some Tips
-
-- Slides can be automatically played if you set the `autoplay` option under `nature`, e.g. go to the next slide every 30 seconds in a lightning talk:
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          autoplay: 30000
-    ```
-
-- If you want to restart the play after it reaches the last slide, you may set the sub-option `loop` to TRUE, e.g.,
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          autoplay:
-            interval: 30000
-            loop: true
-    ```
-
----
-
-# Some Tips
-
-- A countdown timer can be added to every page of the slides using the `countdown` option under `nature`, e.g. if you want to spend one minute on every page when you give the talk, you can set:
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          countdown: 60000
-    ```
-
-    Then you will see a timer counting down from `01:00`, to `00:59`, `00:58`, ... When the time is out, the timer will continue but the time turns red.
-    
----
-
-# Some Tips
-
-- The title slide is created automatically by **xaringan**, but it is just another remark.js slide added before your other slides.
-
-    The title slide is set to `class: center, middle, inverse, title-slide` by default. You can change the classes applied to the title slide with the `titleSlideClass` option of `nature` (`title-slide` is always applied).
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          titleSlideClass: [top, left, inverse]
-    ```
-    
---
-
-- If you'd like to create your own title slide, disable **xaringan**'s title slide with the `seal = FALSE` option of `moon_reader`.
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        seal: false
-    ```
-
----
-
-# Some Tips
-
-- There are several ways to build incremental slides. See [this presentation](https://slides.yihui.org/xaringan/incremental.html) for examples.
-
-- The option `highlightLines: true` of `nature` will highlight code lines that start with `*`, or are wrapped in `{{ }}`, or have trailing comments `#<<`;
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          highlightLines: true
-    ```
-
-    See examples on the next page.
-
----
-
-# Some Tips
-
-
-.pull-left[
-An example using a leading `*`:
-
-    ```r
-    if (TRUE) {
-    ** message("Very important!")
-    }
-    ```
-Output:
-```r
-if (TRUE) {
-* message("Very important!")
-}
-```
-
-This is invalid R code, so it is a plain fenced code block that is not executed.
-]
-
-.pull-right[
-An example using `{{}}`:
-
-````
-`r ''````{r tidy=FALSE}
-if (TRUE) {
-*{{ message("Very important!") }}
-}
-```
-````
-Output:
-```{r tidy=FALSE}
-if (TRUE) {
-{{ message("Very important!") }}
-}
-```
-
-It is valid R code so you can run it. Note that `{{}}` can wrap an R expression of multiple lines.
-]
-
----
-
-# Some Tips
-
-An example of using the trailing comment `#<<` to highlight lines:
-
-````markdown
-`r ''````{r tidy=FALSE}
-library(ggplot2)
-ggplot(mtcars) + 
-  aes(mpg, disp) + 
-  geom_point() +   #<<
-  geom_smooth()    #<<
-```
-````
-
-Output:
-
-```{r tidy=FALSE, eval=FALSE}
-library(ggplot2)
-ggplot(mtcars) + 
-  aes(mpg, disp) + 
-  geom_point() +   #<<
-  geom_smooth()    #<<
-```
-
----
-
-# Some Tips
-
-When you enable line-highlighting, you can also use the chunk option `highlight.output` to highlight specific lines of the text output from a code chunk. For example, `highlight.output = TRUE` means highlighting all lines, and `highlight.output = c(1, 3)` means highlighting the first and third line.
-
-````md
-`r ''````{r, highlight.output=c(1, 3)}
-head(iris)
-```
-````
-
-```{r, highlight.output=c(1, 3), echo=FALSE}
-head(iris)
-```
-
-Question: what does `highlight.output = c(TRUE, FALSE)` mean? (Hint: think about R's recycling of vectors)
-
----
-
-# Some Tips
-
-- To make slides work offline, you need to download a copy of remark.js in advance, because **xaringan** uses the online version by default (see the help page `?xaringan::moon_reader`).
-
-- You can use `xaringan::summon_remark()` to download the latest or a specified version of remark.js. By default, it is downloaded to `libs/remark-latest.min.js`.
-
-- Then change the `chakra` option in YAML to point to this file, e.g.
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        chakra: libs/remark-latest.min.js
-    ```
-
-- If you used Google fonts in slides (the default theme uses _Yanone Kaffeesatz_, _Droid Serif_, and _Source Code Pro_), they won't work offline unless you download or install them locally. The Heroku app [google-webfonts-helper](https://google-webfonts-helper.herokuapp.com/fonts) can help you download fonts and generate the necessary CSS.
-
----
-
-# Macros
-
-- remark.js [allows users to define custom macros](https://github.com/yihui/xaringan/issues/80) (JS functions) that can be applied to Markdown text using the syntax `![:macroName arg1, arg2, ...]` or `![:macroName arg1, arg2, ...](this)`. For example, before remark.js initializes the slides, you can define a macro named `scale`:
-
-    ```js
-    remark.macros.scale = function (percentage) {
-      var url = this;
-      return '<img src="' + url + '" style="width: ' + percentage + '" />';
-    };
-    ```
-
-    Then the Markdown text
-
-    ```markdown
-    ![:scale 50%](image.jpg)
-    ```
-
-    will be translated to
-    
-    ```html
-    <img src="image.jpg" style="width: 50%" />
-    ```
-
----
-
-# Macros (continued)
-
-- To insert macros in **xaringan** slides, you can use the option `beforeInit` under the option `nature`, e.g.,
-
-    ```yaml
-    output:
-      xaringan::moon_reader:
-        nature:
-          beforeInit: "macros.js"
-    ```
-
-    You save your remark.js macros in the file `macros.js`.
-
-- The `beforeInit` option can be used to insert arbitrary JS code before `remark.create()`. Inserting macros is just one of its possible applications.
-
----
-
-# CSS
-
-Among all options in `xaringan::moon_reader`, the most challenging but perhaps also the most rewarding one is `css`, because it allows you to customize the appearance of your slides using any CSS rules or hacks you know.
-
-You can see the default CSS file [here](https://github.com/yihui/xaringan/blob/master/inst/rmarkdown/templates/xaringan/resources/default.css). You can completely replace it with your own CSS files, or define new rules to override the default. See the help page `?xaringan::moon_reader` for more information.
-
----
-
-# CSS
-
-For example, suppose you want to change the font for code from the default "Source Code Pro" to "Ubuntu Mono". You can create a CSS file named, say, `ubuntu-mono.css`:
-
-```css
-@import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-
-.remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
-```
-
-Then set the `css` option in the YAML metadata:
-
-```yaml
-output:
-  xaringan::moon_reader:
-    css: ["default", "ubuntu-mono.css"]
-```
-
-Here I assume `ubuntu-mono.css` is under the same directory as your Rmd.
-
-See [yihui/xaringan#83](https://github.com/yihui/xaringan/issues/83) for an example of using the [Fira Code](https://github.com/tonsky/FiraCode) font, which supports ligatures in program code.
-
----
-
-# Themes
-
-Don't want to learn CSS? Okay, you can use some user-contributed themes. A theme typically consists of two CSS files `foo.css` and `foo-fonts.css`, where `foo` is the theme name. Below are some existing themes:
-
-```{r, R.options=list(width = 70)}
-names(xaringan:::list_css())
-```
-
----
-
-# Themes
-
-To use a theme, you can specify the `css` option as an array of CSS filenames (without the `.css` extensions), e.g.,
-
-```yaml
-output:
-  xaringan::moon_reader:
-    css: [default, metropolis, metropolis-fonts]
-```
-
-If you want to contribute a theme to **xaringan**, please read [this blog post](https://yihui.org/en/2017/10/xaringan-themes).
-
----
-class: inverse, middle, center
-background-image: url(https://upload.wikimedia.org/wikipedia/commons/3/39/Naruto_Shiki_Fujin.svg)
-background-size: contain
-
-# Naruto
-
----
-background-image: url(https://upload.wikimedia.org/wikipedia/commons/b/be/Sharingan_triple.svg)
-background-size: 100px
-background-position: 90% 8%
-
-# Sharingan
-
-The R package name **xaringan** was derived<sup>1</sup> from **Sharingan**, a dōjutsu in the Japanese anime _Naruto_ with two abilities:
-
-- the "Eye of Insight"
-
-- the "Eye of Hypnotism"
-
-I think a presentation is basically a way to communicate insights to the audience, and a great presentation may even "hypnotize" the audience.<sup>2,3</sup>
-
-.footnote[
-[1] In Chinese, the pronounciation of _X_ is _Sh_ /ʃ/ (as in _shrimp_). Now you should have a better idea of how to pronounce my last name _Xie_.
-
-[2] By comparison, bad presentations only put the audience to sleep.
-
-[3] Personally I find that setting background images for slides is a killer feature of remark.js. It is an effective way to bring visual impact into your presentations.
-]
-
----
-
-# Naruto terminology
-
-The **xaringan** package borrowed a few terms from Naruto, such as
-
-- [Sharingan](https://naruto.fandom.com/wiki/Sharingan) (写輪眼; the package name)
-
-- The [moon reader](https://naruto.fandom.com/wiki/Moon_Reader) (月読; an attractive R Markdown output format)
-
-- [Chakra](https://naruto.fandom.com/wiki/Chakra) (查克拉; the path to the remark.js library, which is the power to drive the presentation)
-
-- [Nature transformation](https://naruto.fandom.com/wiki/Nature_Transformation) (性質変化; transform the chakra by setting different options)
-
-- The [infinite moon reader](https://naruto.fandom.com/wiki/Infinite_Tsukuyomi) (無限月読; start a local web server to continuously serve your slides)
-
-- The [summoning technique](https://naruto.fandom.com/wiki/Summoning_Technique) (download remark.js from the web)
-
-You can click the links to know more about them if you want. The jutsu "Moon Reader" may seem a little evil, but that does not mean your slides are evil.
-
----
-
-class: center
-
-# Hand seals (印)
-
-Press `h` or `?` to see the possible ninjutsu you can use in remark.js.
-
-![](https://upload.wikimedia.org/wikipedia/commons/7/7e/Mudra-Naruto-KageBunshin.svg)
-
----
-
-class: center, middle
-
-# Thanks!
-
-Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
-
-The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr/), and [R Markdown](https://rmarkdown.rstudio.com).

@@ -1,5 +1,5 @@
 ---
-title: "resources"
+title: "Resources"
 author: "JJayes"
 date: "17/05/2021"
 output: html_document
@@ -11,11 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(xaringan)
 library(xaringanExtra)
+
+xaringanExtra::use_panelset()
+style_panelset_tabs(foreground = "honeydew", background = "seagreen")
+
 ```
 
-## Resources
+## Purpose
 
-I hope that you find these resources useful. They are divided up into different tabs.
+I hope that you find these resources useful. They are divided up into different sections
 
 ### Why use R?
 
@@ -27,6 +31,54 @@ I think R is a very good choice. There are three reasons I love R for data viz.
 2. The R community is very supportive and makes learning and improving a pleasure.
 3. The entire process of importing and cleaning data, visualizing it, and then sharing it is made easy.
 
+## Resources
+
+::::: {.panelset}
+
+::: {.panel}
+[Resources]{.panel-name}
+
+[David Robinson's Youtube Channel](https://youtu.be/tCa2di7aEP4)
+
+David Robinson does a weekly screencast where he shows how to do exploratory data analysis and makes plots in R.
+
+
+
+He also has a [talk](https://www.youtube.com/watch?v=NDHSBUN_rVU) about tricks in the tidyverse.
+
+[Julia Silge's blog](https://juliasilge.com/blog/hawaii-post-offices/)
+
+Julia Silge's blog is mostly about doing modelling in R, and text modelling in particular. It is a very useful place to look if you want to understand the tidymodels framework which provides access to a host of machine learning techniques in a very easy to use manner. She also has a [Youtube channel](https://www.youtube.com/watch?v=RA5SyY-s-AA&feature=emb_imp_woyt)
+
+[The tidy text mining textbook](https://www.tidytextmining.com/)
+
+:::
+
+::: {.panel}
+[Datasets]{.panel-name}
+
+Having great datasets available helps to keep me interested in learning new skills. Here are three sources of interesting data:
+
+[The Tidy Tuesday Project](https://github.com/rfordatascience/tidytuesday)
+
+Tidy Tuesday is a project run by the R for Data Science foundation - each week they share a real world data set and encourage R users to practice their skills. It has a really fantastic community aspect and if you share your work on Twitter people are always helpful and kind. Others share their work and their code so you can see how their plots were made.
+In their words, "The intent of Tidy Tuesday is to provide a safe and supportive forum for individuals to practice their wrangling and data visualization skills independent of drawing conclusions."
+
+[Data is Plural](https://www.data-is-plural.com/)
+
+"Data is Plural is a weekly newsletter of useful/curious datasets, published by Jeremy Singer-Vine". This sums it up - really interesting stuff from all over the internet.
+
+[Naked Data](https://nakeddata.org/)
+
+"Naked Data is a weekly newsletter which rounds up the best in data-driven storytelling created in or about the Global South." Get the best bits of twitter without having to spend all day scrolling. Really great newsletter based in SA.
+
+:::
+
+:::::
+
+
+
+
 
 # Videos to make
 
@@ -35,3 +87,5 @@ I think R is a very good choice. There are three reasons I love R for data viz.
 ### Recreating published figures.
 
 Use this website to digitize some plot and then draw it again in ggplot2.
+
+
