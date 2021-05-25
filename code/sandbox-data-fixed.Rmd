@@ -95,6 +95,10 @@ df %>% count(race, surname_b, sort = T) %>%
 ```{r}
 df <- read_rds("data/baptism_data.rds")
 
+df <- df %>% 
+  mutate(across(year_baptized:male_profession), na_if(., "."))
+
+
 skimr::skim(df)
 ```
 

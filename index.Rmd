@@ -196,11 +196,237 @@ int_fig
 ---
 # Tips and Tricks
 
-### Back to the suggested Excel Chart
+## Where do we start?
+
+.pull-left[
+
+We will use some data that Laura Richardson has analysed in her exploration of "prenuptial pregnancy and unmarried motherhood amongst a select group of South Africans living in Cape Town" in the first half of the twentieth century. 
+
+]
+
+.pull-right[
+
+![](images/laura-thesis.PNG)
+
+]
+
+---
+# What does the data look like?
+
+![](images/excel-comfort.PNG)
+
+---
+# What does the data look like?
+
+- It has one row per child who is baptised (one row per observation)
+
+- Every column is a variable
+
+- It is a wide dataset
+
+---
+# What does the data look like in R?
+
+```{r}
+df <- read_rds("data/baptism_data.rds")
+
+head(df)
+
+```
+
+---
+# How can we quickly understand what it is made up of?
+
+```{r}
+skimr::skim(df)
+```
+
+---
+# What can we see?
+
+.pull-left[
+
+```{r}
+skimr::skim(df)
+```
+
+]
+
+.pull-right[
+
+- Number of baptisms (1604)
+
+- What data is missing?
+
+- For `female_profession`, `female_country` and `male_country` we are missing data for more than 20 percent of our observations
+
+]
+
+---
+# How many children are baptized in each church?
+
+```{r}
+df %>% 
+  count(parish_name, sort = TRUE)
+
+```
+
+---
+# When are these children baptized?
+
+```{r}
+df %>% 
+  group_by(year_baptized, parish_name) %>% 
+  summarise(number_of_baptisms = n()) %>% 
+  ungroup()
+
+```
+
+---
+# How can we vizualize this?
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r baptism-1-out, ref.label="baptism-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, baptism-1, eval=F}
+df %>% 
+  group_by(year_baptized, parish_name) %>% 
+  mutate(number_of_baptisms = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year_baptized, y = number_of_baptisms, colour = parish_name)) +
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(x = NULL,
+       y = "Number of baptisms per year",
+       colour = "Parish name")
+
+```
+
+]
+]
+---
+# What do we like and dislike?
+
+```{r xaringan-editable, echo=FALSE}
+xaringanExtra::use_editable(expires = 1)
+```
+
+.pull-left[
+
+```{r baptism-1-out-small, ref.label="baptism-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
+
+```
+
+]
+
+.pull-right[
+
+### Improvements:
+
+## .can-edit[idea]
+
+## .can-edit[idea]
+
+]
+
 
 
 ---
+# How can we make it clearer?
 
+.panelset[
+.panel[.panel-name[Plot]
+```{r baptism-2-out, ref.label="baptism-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, baptism-2, eval=F}
+df %>% 
+  group_by(year_baptized, parish_name) %>% 
+  mutate(number_of_baptisms = n()) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = year_baptized, y = number_of_baptisms, colour = parish_name)) +
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(x = NULL,
+       y = "Number of baptisms per year",
+       colour = "Parish name") +
+  facet_wrap(~ parish_name) + #<<
+  theme(legend.position = "none") #<<
+
+```
+
+]
+]
+---
+# Where are the churches?
+
+```{r}
+df %>% 
+  distinct(parish_address)
+```
+
+# But how can we plot these addresses on a map?
+
+---
+## Using the `tidygeocoder` package to get coordinates:
+
+```{r, echo=F}
+locations <- read_rds("data/locations.rds")
+```
+
+```{r, eval=F}
+library(tidygeocoder)
+
+locations <- df %>%
+  select(parish_address) %>%
+  distinct() %>%
+  tidygeocoder::geocode(address = parish_address,
+          method = "osm") 
+
+# Here "osm" stands for Open Street Map
+# The package also supports Google Maps, amongst others
+```
+
+[Here is a link](https://github.com/jessecambon/tidygeocoder) to the `tidygeocoder` package.
+---
+## Using the `tidygeocoder` package to get coordinates:
+
+This is what we get back:
+
+```{r}
+locations
+```
+
+---
+# Where are these points?
+
+
+
+---
+# What are the demographic groups in each church?
+
+```{r}
+df %>% 
+  group_by(year_baptized, parish_name) %>% 
+  summarise(number_of_baptisms = n()) %>% 
+  ungroup()
+
+```
+
+
+---
 # What charts to use
 
 
@@ -361,6 +587,8 @@ r
 class: inverse, center, middle
 
 # How can we show this on a map?
+
+## But still retain the legibility of the column chart?
 
 --
 
