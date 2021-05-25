@@ -95,8 +95,8 @@ df %>% count(race, surname_b, sort = T) %>%
 ```{r}
 df <- read_rds("data/baptism_data.rds")
 
-df <- df %>% 
-  mutate(across(year_baptized:male_profession), na_if(., "."))
+# df <- df %>% 
+#   mutate(across(year_baptized:male_profession), na_if(., "."))
 
 
 skimr::skim(df)
@@ -287,6 +287,8 @@ ggmap(CT_map) +
 Leaflet map
 
 ```{r}
+library(leaflet)
+library(glue)
 
 df <- df %>% 
   # this popup will contain the parsh name in bold (<b> ... </b> makes bold) 
@@ -298,6 +300,8 @@ df %>%
   leaflet() %>% 
   # adds a background
   addTiles() %>% 
+  # makes the map grey in colour
+  addProviderTiles(providers$CartoDB.Positron) %>% 
   # sets the centre of the map with the mean values of lat and long
   setView(mean(df$long), mean(df$lat), zoom = 11) %>% 
   # here we add a marker with the popup specified above, inclduing the name of the parish and its address.
