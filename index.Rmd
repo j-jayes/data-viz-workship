@@ -23,7 +23,7 @@ options(htmltools.dir.version = FALSE)
 knitr::opts_chunk$set(message = F, warning = F)
 
 library(pacman)
-p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext)
+p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext, ggiraph, htmlwidgets)
 
 # ggplot2 settings so plots scale well for slide size 
 theme_set(theme_light(16)) # 16 for full width, 18 for half width 
@@ -185,7 +185,7 @@ int_fig
 
 <center>
 
-<iframe width="540" height="540" src="https://www.youtube.com/embed/D_Aakjiadm4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="500" height="500" src="https://www.youtube.com/embed/D_Aakjiadm4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 </center>
 
@@ -199,78 +199,14 @@ int_fig
 ### Back to the suggested Excel Chart
 
 
-
----
-# Advantages of R
-
-### Workflow
-
-With other software, your workflow is separated between different applications and windows:
-
-.pull-left[
-
-![Stata](images/stata.png)
-
-]
-
-.pull-right[
-
-![Excel and Word](images/excel-word.png)
-
-]
-
 ---
 
-# Advantages of R
-
-## Rstudio lets you do all your work in one place
-
-```{r, echo=FALSE, out.width="80%", fig.align = 'center'}
-knitr::include_graphics("images/rstudio.png")
-```
-
----
-# Advantages of R
-
-## Export your R work to any number of formats
-
-```{r, echo=FALSE, out.width="90%", fig.align = 'center'}
-knitr::include_graphics("images/rmarkdown.png")
-```
+# What charts to use
 
 
 ---
+# Choosing colour
 
-# Advantages of R
-
-## Programatic updating
-
-
-
----
-# Advantages of R
-
-### If you're an economist:
---
-
-- You're likely to want do do a DiD at some point.
-
-- You may be interested in ML or Big Data
-
-![](images/methods.png)
-
----
-# Advantages of R: Economist
-### The latest DiD methods are implemented in R
-
-For example: 
-- [Difference-in-Differences with multiple time periods](https://www.sciencedirect.com/science/article/abs/pii/S0304407620303948?via%3Dihub)
-- [How Much Should We Trust Staggered Difference-In-Differences Estimates?](https://andrewcbaker.netlify.app/publication/blw_did/)
-
-![](images/did-pedro.PNG)
-
----
-### Colour
 
 
 ---
@@ -856,6 +792,12 @@ df %>%
 Publishing your research on the web is a good way to get it out there. Making your visualizations interactive is a fantastic way to have your readers explore the story you tell.
 
 ---
+
+# Return to your familiar situation having changed
+
+
+
+---
 # Economic history data example
 
 We're going to go from importing the data to making one polished plot.
@@ -869,4 +811,75 @@ We're going to go from importing the data to making one polished plot.
 ```{r}
 # df <- read_rds("data/")
 ```
+
+
+
+---
+# Advantages of R
+
+### Workflow
+
+With other software, your workflow is separated between different applications and windows:
+
+.pull-left[
+
+![Stata](images/stata.png)
+
+]
+
+.pull-right[
+
+![Excel and Word](images/excel-word.png)
+
+]
+
+---
+
+# Advantages of R
+
+## Rstudio lets you do all your work in one place
+
+```{r, echo=FALSE, out.width="80%", fig.align = 'center'}
+knitr::include_graphics("images/rstudio.png")
+```
+
+---
+# Advantages of R
+
+## Export your R work to any number of formats
+
+```{r, echo=FALSE, out.width="90%", fig.align = 'center'}
+knitr::include_graphics("images/rmarkdown.png")
+```
+
+
+---
+
+# Advantages of R
+
+## Programatic updating
+
+
+
+---
+# Advantages of R
+
+### If you're an economist:
+--
+
+- You're likely to want do do a DiD at some point.
+
+- You may be interested in ML or Big Data
+
+![](images/methods.png)
+
+---
+# Advantages of R: Economist
+### The latest DiD methods are implemented in R
+
+For example: 
+- [Difference-in-Differences with multiple time periods](https://www.sciencedirect.com/science/article/abs/pii/S0304407620303948?via%3Dihub)
+- [How Much Should We Trust Staggered Difference-In-Differences Estimates?](https://andrewcbaker.netlify.app/publication/blw_did/)
+
+![](images/did-pedro.PNG)
 
