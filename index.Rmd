@@ -23,7 +23,7 @@ options(htmltools.dir.version = FALSE)
 knitr::opts_chunk$set(message = F, warning = F)
 
 library(pacman)
-p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext, ggiraph, htmlwidgets)
+p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext, ggiraph, htmlwidgets, glue)
 
 # ggplot2 settings so plots scale well for slide size 
 theme_set(theme_light(16)) # 16 for full width, 18 for half width 
@@ -372,6 +372,326 @@ df %>%
 ]
 ]
 ---
+# Takeaways
+
+.pull-left[
+```{r baptism-2-out-small, ref.label="baptism-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+]
+
+.pull-right[
+
+- **Christ Church, Kenilworth** and **St Peter's, Mowbray** have baptism records for the entire period
+
+- Others have only periodic data
+
+- The bulk of our data comes from **St Mark's, Athlone**, and begins later in the series
+
+- We must think about these factors when examining time trends
+
+]
+
+---
+# Our question:
+
+--
+
+### What characterises the couples who conceieved a child before marriage?
+
+---
+# What are the types of pregnancies?
+
+.pull-left[
+
+### Conventional pregnancies
+
+- Child is conceived after marriage
+
+### Prenuptial pregnancy
+
+- Child is conceived before marriage
+
+]
+
+.pull-right[
+
+![](images/baby-2.jpg)
+
+]
+
+
+---
+## How can we tell what type of pregnancy we have for each record?
+
+--
+
+### We have the date of birth and date of marriage
+
+--
+
+### We can do some subtraction
+
+```{r, echo=FALSE, out.width="80%", fig.align = 'center'}
+knitr::include_graphics("images/baby.jpg")
+```
+
+---
+# Dealing with dates
+
+Dates are difficult:
+
+- There are three parts to the [rule determining a leap year](https://r4ds.had.co.nz/dates-and-times.html)
+
+- There are many formats to write a date in (e.g. dmy vs mdy)
+
+The best resource for dealing with dates in R is in [Chapter 16](https://r4ds.had.co.nz/dates-and-times.html) of [R for Data Science](https://r4ds.had.co.nz/index.html) entitled **Dates and times**.
+
+### We will explore a brief example with our baptism data.
+
+---
+# When are the children born?
+
+### The months are recorded differently!
+
+.pull-left[
+
+```{r}
+df %>% 
+  count(month_baptized, 
+        sort = T) %>% 
+  head()
+```
+
+]
+
+.pull-right[
+
+```{r}
+df %>% 
+  count(month_of_birth, 
+        sort = T) %>% 
+  head()
+```
+
+]
+
+.footnote[
+
+Note that the months are recorded as characters not numbers, a result of importing them from Excel.
+
+]
+
+---
+### When are the children born?
+```{r}
+library(glue)
+library(lubridate)
+
+df <- df %>% 
+  # this glues together three individual variables into 
+  # one new variable called `birth_date`
+  mutate(birth_date = 
+           glue("{day_of_birth}-{month_of_birth}-{year_of_birth}"),
+         # dmy here means read the date as "day-month-year"
+         birth_date = dmy(birth_date))
+
+df %>% select(christian_name, birth_date) %>% head()
+```
+
+---
+# When are the children baptized?
+
+```{r, warning=TRUE}
+df <- df %>% 
+  mutate(baptism_date = 
+           glue("{day_baptized}-{month_baptized}-{year_baptized}"),
+         baptism_date = dmy(baptism_date))
+
+df %>% select(christian_name, birth_date, baptism_date) %>% head()
+```
+
+---
+### Why did 76 dates fail?
+
+```{r}
+df %>% 
+  filter(is.na(baptism_date)) %>% 
+  select(year_baptized:day_baptized)
+
+```
+
+We see a number of NAs
+
+### Data quality issues are important to catch!
+
+---
+# When are the parents married?
+
+```{r}
+df <- df %>% 
+  mutate(married_date = 
+           glue("{day_married}-{month_married}-{year_married}"),
+         married_date = dmy(married_date))
+
+df %>% select(christian_name, birth_date, married_date) %>% head()
+```
+
+---
+# How many prenuptial pregnancies do we have?
+
+```{r}
+df <- df %>% 
+  mutate(days_marriage_to_birth = 
+           as.numeric(as.duration(birth_date - married_date), "days"),
+         # if gap between parents' marriage and child's birth 
+         # is less than 280 days we classify it as a prenup_preg
+         prenup_preg = ifelse(days_marriage_to_birth < 280, 1, 0))
+
+df %>% count(prenup_preg, sort = T)
+
+```
+
+
+---
+### What does the distribution of pregnancies look like by parish?
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r baptism-3-out, ref.label="baptism-3", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, baptism-3, eval=F}
+df %>% 
+  ggplot(aes(days_marriage_to_birth, fill = parish_name)) +
+  geom_density(show.legend = F) +
+  geom_vline(xintercept = 280, lty = 2) +
+  facet_wrap(~ parish_name) +
+  scale_fill_brewer(palette = "Dark2") +
+  scale_x_continuous(limits = c(0, 1000)) +
+  theme(axis.text.y = element_blank()) +
+  labs(x = "Days from parents' marriage to birth of child",
+       y = NULL,
+       caption = "Note: dotted line indicates 280 days")
+
+```
+
+]
+]
+
+---
+### What does the distribution of pregnancies look like over time?
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r baptism-4-out, ref.label="baptism-4", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, baptism-4, eval=F}
+library(ggridges)
+df %>% 
+  mutate(decade = year_baptized - year_baptized %% 10,
+         decade = as.factor(str_c(decade, "s"))) %>% 
+  select(days_marriage_to_birth, decade) %>% 
+  filter(!is.na(decade)) %>% 
+  ggplot(aes(days_marriage_to_birth, y = decade, fill = decade)) +
+  geom_density_ridges_gradient(scale = 3, 
+                               rel_min_height = 0.01, 
+                               gradient_lwd = 1.,
+                               show.legend = F) +
+  geom_vline(xintercept = 280, lty = 2) +
+  scale_fill_brewer(palette = "Dark2") +
+  scale_x_continuous(limits = c(0, 1000)) +
+  labs(x = "Days from parents' marriage to birth of child",
+       y = NULL,
+       caption = "Note: dotted line indicates 280 days")
+
+```
+
+]
+]
+
+
+---
+# Is it clear?
+
+.pull-left[
+
+```{r baptism-4-out-small, ref.label="baptism-4", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
+
+```
+
+]
+
+.pull-right[
+
+### We can see a time trend
+
+- More parents get married while the mother is pregnant after the 1910s
+
+### But, it is difficult to see proportions
+
+]
+
+---
+# How many pregnancies of each type do we have?
+
+
+
+---
+
+
+---
+# What are the ages of the parents?
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r ages-1-out, ref.label="ages-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, ages-1, eval=F}
+df %>% 
+  mutate(age_diff = female_age - male_age) %>% 
+  ggplot(aes(age_diff)) +
+  geom_density()
+
+
+  # select(surname_b, male_age, female_age) %>% 
+  # pivot_longer(-surname_b, names_to = "age", values_to = "value")
+  # mutate(mean_male_age = mean(male_age, na.rm = T),
+  #        mean_female_age = mean(female_age, na.rm = T)) %>% 
+  # ggplot() +
+  # geom_density(aes(male_age, fill = "Male age"), fill = "blue", alpha = .5) +
+  # # geom_vline(xintercept = distinct(mean_male_age), )
+  # geom_density(aes(female_age),  fill = "red", alpha = .5)
+
+```
+
+]
+]
+
+
+---
+# Do these differ by type of pregnancy?
+
+
+
+---
 # Where are the churches?
 
 ```{r}
@@ -428,34 +748,6 @@ df %>%
 
 
 ---
-# What are the demographic groups in each church?
-
-```{r}
-df %>% 
-  group_by(year_baptized, parish_name) %>% 
-  summarise(number_of_baptisms = n()) %>% 
-  ungroup()
-
-```
-
-
----
-# What charts to use
-
-## Choosing charts for exploratory data analysis isn't hard
-
-### Stick to the winners:
-
-- scatter plots
-- column charts
-- simple maps
-
-```{r}
-
-```
-
-
----
 # Dealing with categories
 
 ### Often we will have many different categories 
@@ -498,11 +790,11 @@ df %>%
 ---
 ### Dealing with categories
 
-We can `filter` for only professions with 5 or more observations.
+We can `filter` for only professions with 6 or more observations.
 
 .panelset[
 .panel[.panel-name[Plot]
-```{r, professions-2-out, ref.label="professions-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+```{r, professions-2-out, ref.label="professions-2", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
 
 ```
 
@@ -516,17 +808,17 @@ df %>%
   filter(!is.na(female_profession)) %>% 
   count(female_profession, sort = T) %>% 
   mutate(female_profession = fct_reorder(female_profession, n)) %>% 
-  filter(n > 6 %>% #<<
+  filter(n > 6) %>% #<<
   ggplot(aes(x = n, y = female_profession, 
              fill = str_detect(female_profession, "Domestic"))) + #<<
   geom_col() +
   labs(x = "Number of observations",
        y = NULL,
-       fill = "Domestic",
+       fill = "Contains 'Domestic'",
        title = "Most common female professions",
        caption = "Limited to professions with more than 5 observations") + #<<
   scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "bottom") #<<
+  theme(legend.position = "right") #<<
 ```
 
 ]
@@ -553,17 +845,18 @@ df %>%
   filter(!is.na(female_profession)) %>% 
     mutate(female_profession = fct_lump(female_profession, 12)) %>% #<<
   count(female_profession, sort = T) %>%
-  mutate(female_profession = fct_reorder(female_profession, n)) %>% 
+  mutate(female_profession = fct_reorder(female_profession, n),
+         female_profession = fct_relevel(female_profession, "Other")) %>% 
   ggplot(aes(x = n, y = female_profession, 
              fill = str_detect(female_profession, "Domestic"))) + #<<
   geom_col() +
   labs(x = "Number of observations",
        y = NULL,
-       fill = "Domestic",
+       fill = "Contains 'Domestic'",
        title = "Most common female professions",
        caption = "Limited to professions with more than 5 observations") + #<<
   scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "bottom") #<<
+  theme(legend.position = "right") #<<
 ```
 
 ]
@@ -605,9 +898,30 @@ df %>%
 ]
 ]
 
+---
+class: inverse, center, middle
+
+# Summing up
+
+---
+
+# What charts to use
+
 --
 
-# Choosing colour
+## Choosing charts for exploratory data analysis isn't hard
+
+--
+
+### Stick to the winners:
+
+- line charts
+- scatter plots
+- column charts
+- simple maps
+- density plots
+
+---
 
 
 
@@ -766,11 +1080,13 @@ class: inverse, center, middle
 
 ## But still retain the legibility of the column chart?
 
---
+---
 
-## Represent each country with the same size
+class: inverse, center, middle
 
-### And arrange the countries in 'roughly' the correct place geographically
+# Represent each country with the same size
+
+## And arrange the countries in 'roughly' the correct place geographically
 
 ---
 .panelset[
@@ -1027,13 +1343,13 @@ df %>%
 
 ```{r greece-denmark-marriage-demo-1, eval = F}
 df %>% 
-  group_by(year) %>% 
-  mutate(mean_pbom = mean(pbom, na.rm = T)) %>% 
-  ungroup() %>% 
+  group_by(year) %>% #<<
+  mutate(mean_pbom = mean(pbom, na.rm = T)) %>% #<<
+  ungroup() %>% #<<
   ggplot() +
   geom_line(aes(x = year, y = pbom, group = country, colour = country), 
             data = df %>% filter(flag == 1)) +
-  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) +
+  geom_line(aes(x = year, y = mean_pbom, colour = "European average")) + #<<
   scale_y_continuous(labels = percent_format(scale = 1)) +
   labs(y = "Proportion of births\noutside of marriage",
        x = NULL,
@@ -1124,7 +1440,9 @@ class: center, middle, inverse
 
 # This is silly
 
---
+---
+
+class: center, middle, inverse
 
 ## The legend is gigantic
 

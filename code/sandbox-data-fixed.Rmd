@@ -26,6 +26,7 @@ df <- df %>%
          Christian_name, Surname_b,
          Year_of_birth, Month_of_birth, Day_of_birth, 
          Race, 
+         Year_married, Month_married, Day_married,
          Female_age, Female_surname, Female_name, Female_country, Female_profession,
          Male_age, Male_surname, Male_name, Male_country, Male_Profession)
 
@@ -65,7 +66,7 @@ df <- df %>%
   mutate(parish_name = case_when(
     
     str_detect(parish_name, "Christ Church") ~ "Christ Church, Kenilworth",
-    str_detect(parish_name, "St Mark") ~ "St Mark's Atholone",
+    str_detect(parish_name, "St Mark") ~ "St Mark's, Athlone",
     str_detect(parish_name, "St Peter") ~ "St Peter's, Mowbray",
     str_detect(parish_name, "St James") ~ "St James the Great, Sea Point",
     str_detect(parish_name, "St Cyprian") ~ "St Cyprian's, Langa",
@@ -79,10 +80,14 @@ df %>% distinct(parish_name)
 df %>% 
   drop_na()
 
-df %>% count(race, surname_b, sort = T) %>% 
-  group_by(race) %>% 
-  slice_max(n, n = 5, with_ties = F) %>% 
-  ungroup() %>% view()
+# df %>% count(race, surname_b, sort = T) %>% 
+#   group_by(race) %>% 
+#   slice_max(n, n = 5, with_ties = F) %>% 
+#   ungroup() %>% view()
+
+df <- df %>%
+  mutate(across(year_baptized:male_profession), na_if(., "."))
+
 
 # write_rds(df, "data/baptism_data.rds")
 
@@ -95,8 +100,6 @@ df %>% count(race, surname_b, sort = T) %>%
 ```{r}
 df <- read_rds("data/baptism_data.rds")
 
-# df <- df %>% 
-#   mutate(across(year_baptized:male_profession), na_if(., "."))
 
 
 skimr::skim(df)
@@ -681,6 +684,50 @@ df %>%
               alpha = 0.5, nudge_x = 0.5, nudge_y = 0.5, size = 3) +
   theme(panel.grid = element_blank()) +
   theme_void()
+
+```
+
+
+### Ridges
+
+```{r}
+df <- read_rds("data/baptism_data.rds")
+
+df %>% 
+  mutate(decade = year_baptized - year_baptized %% 10,
+         decade = as.factor(str_c(decade, "s"))) %>% 
+  select(days_marriage_to_birth, decade) %>% 
+  filter(!is.na(decade)) %>% 
+  ggplot(aes(days_marriage_to_birth, y = decade, fill = decade)) +
+  geom_density_ridges_gradient(scale = 3, 
+                                 rel_min_height = 0.01, 
+                                 gradient_lwd = 1.,
+                               show.legend = F) +
+  geom_vline(xintercept = 280, lty = 2) +
+  # scale_fill_brewer(palette = "Dark2") +
+  scale_x_continuous(limits = c(0, 1000)) +
+  labs(x = "Days from parents' marriage to birth of child",
+       y = NULL,
+       caption = "Note: dotted line indicates 280 days")
+
+df %>% 
+  filter(launched > 1970,
+         !str_detect(name, "Amoco")) %>% 
+  mutate(decade = launched - launched %% 10,
+         decade = str_c(decade, "s")) %>% 
+  mutate(decade = factor(decade)) %>% 
+  ggplot(aes(x = tonnage, y = decade, fill = stat(x))) +
+    geom_density_ridges_gradient(scale = 3, 
+                                 rel_min_height = 0.01, 
+                                 gradient_lwd = 1.) +
+  scale_x_continuous(labels = scales::number_format()) +
+  scale_fill_viridis_c(name = "", option = "D",
+                       labels = scales::number_format()) +
+  labs(y = "Decade of ship's launch",
+       x = "Deadweight tonnage of ship") +
+  theme(legend.position = "bottom", legend.key.width = unit(3.4, "cm")) +
+  guides(fill = guide_colourbar(title.position = "bottom"))
+
 
 ```
 
