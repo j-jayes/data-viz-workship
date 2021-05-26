@@ -149,6 +149,9 @@ df %>%
 df %>% 
   count()
 
+df %>% 
+  arrange(desc(year_baptized))
+
 ```
 
 

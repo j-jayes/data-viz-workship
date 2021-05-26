@@ -200,7 +200,11 @@ int_fig
 
 .pull-left[
 
-We will use some data that Laura Richardson has analysed in her exploration of "prenuptial pregnancy and unmarried motherhood amongst a select group of South Africans living in Cape Town" in the first half of the twentieth century. 
+- We will use some data that Laura Richardson has analysed.
+
+- It contains baptism records from seven Anglican churches in Cape Town between 1910 and 1960.
+
+- [Here is a link](https://scholar.sun.ac.za/handle/10019.1/109081) to her Master's thesis, an exploration of "**prenuptial pregnancy and unmarried motherhood** amongst a select group of South Africans living in Cape Town" in the first half of the twentieth century. 
 
 ]
 
@@ -336,8 +340,6 @@ xaringanExtra::use_editable(expires = 1)
 
 ]
 
-
-
 ---
 # How can we make it clearer?
 
@@ -391,6 +393,7 @@ library(tidygeocoder)
 
 locations <- df %>%
   select(parish_address) %>%
+  # `distinct` means take only one of each address
   distinct() %>%
   tidygeocoder::geocode(address = parish_address,
           method = "osm") 
@@ -412,6 +415,16 @@ locations
 ---
 # Where are these points?
 
+```{r}
+df %>% 
+  distinct(lat, long, parish_address) %>% 
+  ggplot(aes(x = long, y = lat, 
+             # tell `geom_text` to display the address as text
+             label = parish_address)) +
+  geom_point() +
+  geom_text()
+
+```
 
 
 ---
@@ -429,8 +442,171 @@ df %>%
 ---
 # What charts to use
 
+## Choosing charts for exploratory data analysis isn't hard
+
+### Stick to the winners:
+
+- scatter plots
+- column charts
+- simple maps
+
+```{r}
+
+```
+
 
 ---
+# Dealing with categories
+
+### Often we will have many different categories 
+
+- For example, in our dataset we have 147 different occupations for women
+
+```{r}
+df %>% 
+  filter(!is.na(female_profession)) %>% 
+  count(female_profession, sort = T)
+```
+
+
+---
+### It's not possible to put them all on one chart
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r, professions-1-out, ref.label="professions-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+```{r, professions-1, eval=F}
+df %>% 
+  filter(!is.na(female_profession)) %>% 
+  count(female_profession, sort = T) %>% 
+  mutate(female_profession = fct_reorder(female_profession, n)) %>% 
+  ggplot(aes(x = n, y = female_profession)) +
+  geom_col() +
+  labs(x = "Number of observations",
+       y = NULL)
+```
+
+]
+]
+
+---
+### Dealing with categories
+
+We can `filter` for only professions with 5 or more observations.
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r, professions-2-out, ref.label="professions-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+
+
+]
+
+.panel[.panel-name[Code]
+```{r, professions-2, eval=F}
+df %>% 
+  filter(!is.na(female_profession)) %>% 
+  count(female_profession, sort = T) %>% 
+  mutate(female_profession = fct_reorder(female_profession, n)) %>% 
+  filter(n > 6 %>% #<<
+  ggplot(aes(x = n, y = female_profession, 
+             fill = str_detect(female_profession, "Domestic"))) + #<<
+  geom_col() +
+  labs(x = "Number of observations",
+       y = NULL,
+       fill = "Domestic",
+       title = "Most common female professions",
+       caption = "Limited to professions with more than 5 observations") + #<<
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = "bottom") #<<
+```
+
+]
+]
+
+---
+# Dealing with categories
+
+Or we can choose 12 categories and lump with `fct_lump` the remaining categories into "Other". 
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r, professions-3-out, ref.label="professions-3", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+```{r, professions-3, eval=F}
+library(tidytext)
+
+df %>% 
+  filter(!is.na(female_profession)) %>% 
+    mutate(female_profession = fct_lump(female_profession, 12)) %>% #<<
+  count(female_profession, sort = T) %>%
+  mutate(female_profession = fct_reorder(female_profession, n)) %>% 
+  ggplot(aes(x = n, y = female_profession, 
+             fill = str_detect(female_profession, "Domestic"))) + #<<
+  geom_col() +
+  labs(x = "Number of observations",
+       y = NULL,
+       fill = "Domestic",
+       title = "Most common female professions",
+       caption = "Limited to professions with more than 5 observations") + #<<
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = "bottom") #<<
+```
+
+]
+]
+
+---
+# Dealing with categories
+
+Or we can lump with `fct_lump` the remaining categories into "Other". 
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r, professions-4-out, ref.label="professions-4", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+```{r, professions-4, eval=F}
+library(tidytext)
+
+df %>% 
+  filter(!is.na(female_profession)) %>% group_by(race) %>% count(female_profession, sort = T) %>% slice_max(n, n = 6, with_ties = F) %>% ungroup() %>% #<<
+  mutate(female_profession = reorder_within(female_profession, n, race)) %>% #<<
+  ggplot(aes(x = n, y = female_profession, 
+             fill = race)) + #<<
+  geom_col() +
+  scale_y_reordered() + #<<
+  facet_wrap(~ race, scales = "free") + #<<
+  labs(x = "Number of observations",
+       y = NULL,
+       fill = "Domestic",
+       title = "Five most common female professions by race") + #<<
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = "bottom")
+```
+
+]
+]
+
+--
+
 # Choosing colour
 
 
@@ -1037,12 +1213,12 @@ Publishing your research on the web is a good way to get it out there. Making yo
 library(leaflet)
 library(glue)
 
-df <- read_rds("data/baptism_data.rds")
+df <- read_rds("data/baptism_data.rds") %>% group_by(parish_name) %>% mutate(n_obs = n()) %>% ungroup()
 
 df <- df %>% 
   # this popup will contain the parsh name in bold (<b> ... </b> makes bold) 
   # and the address in the next line (with a <br/> break)
-  mutate(popup = glue("<b>{parish_name}</b><br/>{parish_address}"))
+  mutate(popup = glue("<b>{parish_name}</b><br/>Located at {parish_address},<br/>this parish has <b>{n_obs}</b> baptisms in our dataset."))
 
 df %>% 
   # makes a leaflet map
