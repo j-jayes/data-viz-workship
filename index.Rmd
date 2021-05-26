@@ -50,6 +50,33 @@ Photo from [Hans Rosling's TED Talk](https://www.ted.com/talks/hans_rosling_the_
 ]
 ]
 ---
+# Structure
+
+
+.pull-left[
+
+### 1. Exploratory Data Analysis
+
+### 2. Why Data Viz?
+
+#### Break
+
+### 3. Polishing Figures for Publication
+
+### 4. Interactivity
+
+### 5. Recreating Published Figures
+
+]
+
+.pull-right[
+
+![](images/structure.jpg)
+
+]
+
+---
+
 class: center, top
 
 # Everything is a story
@@ -73,7 +100,7 @@ class: center, top
 
 ---
 
-# The zone of comfort
+# 1. The zone of comfort
 
 Our stomping ground **MS Excel**:
 
@@ -81,7 +108,7 @@ Our stomping ground **MS Excel**:
 
 ---
 
-# The zone of comfort
+# 1. The zone of comfort
 
 **MS Excel** has useful features that suggest how to visualize your data
 
@@ -102,6 +129,10 @@ class: center, top
 
 ###[Dan Harmon's Story circle](https://youtu.be/UdxX_Kljrq8)
 
+---
+class: inverse, center, middle
+
+# 2. You want something
 
 ---
 # You want to learn about your data by
@@ -192,10 +223,12 @@ int_fig
 ]
 ]
 
+---
+class: inverse, center, middle
+
+# 3. You enter an unfamiliar situation
 
 ---
-# Tips and Tricks
-
 ## Where do we start?
 
 .pull-left[
@@ -646,7 +679,39 @@ df %>%
 ---
 # How many pregnancies of each type do we have?
 
+.panelset[
+.panel[.panel-name[Plot]
+```{r baptism-5-out, ref.label="baptism-5", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
 
+```
+
+]
+
+.panel[.panel-name[Code]
+
+```{r, baptism-5, eval=F}
+df %>% 
+  mutate(decade = year_baptized - year_baptized %% 10,
+         decade = as.factor(str_c(decade, "s"))) %>% 
+  select(prenup_preg, decade) %>% 
+  filter(!is.na(decade)) %>% 
+  group_by(decade, prenup_preg) %>% 
+  summarise(n_obs = n()) %>%
+  ungroup() %>% 
+  # pivot_wider(names_from = prenup_preg, names_prefix = "preg", values_from = n_obs)
+  ggplot(aes(y = decade, x = n_obs, fill = as.factor(prenup_preg))) +
+  geom_col(position = "fill", show.legend = F) +
+  scale_x_continuous(labels = percent_format()) +
+  scale_fill_manual(values = c("#af8dc3", "#7fbf7b")) +
+  labs(y = NULL,
+       x = NULL,
+       title = "Share of <span style='color:#7fbf7b'>Prenuptual</span> and <span style='color:#af8dc3'>Conventional</span>Pregnancies by decade") +
+  theme(plot.title = element_markdown())
+
+```
+
+]
+]
 
 ---
 
@@ -1500,11 +1565,11 @@ df %>%
 
 - Shows each of the series
 
-- Makes clear which countries you are interested in
+- We can see that Denmark is a leader in the beginning, but is caught up by other nations
 
 - Does not hide outliers
 
-- A good complement to a ribbon showing the 10th to 90th perceintile interval
+- Makes clear the trends in your countries of interest
 
 ]
 
