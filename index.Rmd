@@ -1076,18 +1076,36 @@ df %>%
 ---
 ### Plotting results
 
-```{r}
+.panelset[
+.panel[.panel-name[Plot]
+```{r, results-1-out, ref.label="results-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
 
-df %>% 
-  mutate(prenup_preg = as.numeric(as.factor(prenup_preg))) %>% 
-  lm(prenup_preg ~ female_age + male_age + race + parish_name, data = .) %>% 
-  tidy(conf.int = T) %>% 
-  filter(term != "(Intercept)") %>% 
-  ggplot(aes(estimate, y = term)) +
-  geom_point() +
-  geom_vline(xintercept = 0, lty = 2)
 ```
 
+]
+
+.panel[.panel-name[Code]
+```{r, results-1, eval=F}
+df %>% 
+  mutate(prenup_preg = as.numeric(as.factor(prenup_preg))) %>% 
+  lm(prenup_preg ~ female_age + male_age + race + parish_name + year_baptized, data = .) %>% 
+  tidy(conf.int = T) %>% 
+  filter(term != "(Intercept)") %>% 
+  mutate(type = case_when(
+    str_detect(term, "parish_name") ~ "Parish FE",
+    str_detect(term, "race") ~ "Race",
+    str_detect(term, "age") ~ "Age",
+    TRUE ~ "Time trend" )) %>% mutate(term = str_remove_all(term, "race|parish_name"),
+         term = str_replace_all(term, "_", " "),
+         term = str_to_title(term)) %>% 
+  ggplot(aes(estimate, y = term, colour = type)) +
+  geom_point() + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high, y = term)) +
+  geom_vline(xintercept = 0, lty = 2) +labs(x = NULL, y = NULL, colour = "Var type")
+
+```
+
+]
+]
 
 ---
 class: inverse, center, middle
@@ -1841,7 +1859,6 @@ class: inverse, center, middle
 # 7. Return to your familiar situation
 
 ---
-
 ### Thank you
 
 ![](images/library.jpg)
