@@ -156,12 +156,12 @@
 <clipPath id="clip1">
   <path d="M 382.898438 369.089844 L 469.296875 369.089844 L 469.296875 386.371094 L 382.898438 386.371094 Z M 382.898438 369.089844 "/>
 </clipPath>
-<image id="image193" width="300" height="1" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAABCAIAAADrWgR+AAAABmJLR0QA/wD/AP+gvaeTAAAAwUlEQVQokXWRWw7DQAgDx+zVeoTe/yh1P4BkyUNaRWbsENjooy8hJAKV0EGqVHOBpLMscjsD+jUmhFPwBEeHzBwWfeQUsEG8Z8D3/OSuCTE7ac5e9pPqdoFdluX5oWy2j9qTF9S5iB/2enjXmzta9Xc9XXwl3jYq1yJgyUteOMSSA4ccooUDQlZZpJAcQrisvPISg+QlRYv+2xc4xSNskTPX5BB4bTDw0vnMmXO74Igd5YjVymfP2n0EKvNGLuKX4g/Rq5ALgITNvgAAAABJRU5ErkJggg=="/>
+<image id="image223" width="300" height="1" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAABCAIAAADrWgR+AAAABmJLR0QA/wD/AP+gvaeTAAAAwUlEQVQokXWRWw7DQAgDx+zVeoTe/yh1P4BkyUNaRWbsENjooy8hJAKV0EGqVHOBpLMscjsD+jUmhFPwBEeHzBwWfeQUsEG8Z8D3/OSuCTE7ac5e9pPqdoFdluX5oWy2j9qTF9S5iB/2enjXmzta9Xc9XXwl3jYq1yJgyUteOMSSA4ccooUDQlZZpJAcQrisvPISg+QlRYv+2xc4xSNskTPX5BB4bTDw0vnMmXO74Igd5YjVymfP2n0EKvNGLuKX4g/Rq5ALgITNvgAAAABJRU5ErkJggg=="/>
 <pattern id="pattern0" patternUnits="userSpaceOnUse" width="300" height="1"  patternTransform="matrix(0.288,0,0,17.28,382.899589,369.089376)">
-  <use xlink:href="#image193"/>
+  <use xlink:href="#image223"/>
 </pattern>
 </defs>
-<g id="surface189">
+<g id="surface219">
 <rect x="0" y="0" width="648" height="400" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
 <path style="fill-rule:nonzero;fill:rgb(34.901961%,34.901961%,34.901961%);fill-opacity:1;stroke-width:1.066978;stroke-linecap:square;stroke-linejoin:miter;stroke:rgb(100%,100%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 418.898438 136.019531 L 432.957031 136.019531 L 432.957031 121.960938 L 418.898438 121.960938 Z M 418.898438 136.019531 "/>
 <path style="fill-rule:nonzero;fill:rgb(34.901961%,34.901961%,34.901961%);fill-opacity:1;stroke-width:1.066978;stroke-linecap:square;stroke-linejoin:miter;stroke:rgb(100%,100%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 320.484375 150.078125 L 334.542969 150.078125 L 334.542969 136.019531 L 320.484375 136.019531 Z M 320.484375 150.078125 "/>

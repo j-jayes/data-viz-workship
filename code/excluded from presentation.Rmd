@@ -1,0 +1,79 @@
+---
+title: "excluded from presentation"
+author: "JJayes"
+date: "27/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Advantages of R
+
+### Workflow
+
+With other software, your workflow is separated between different applications and windows:
+
+.pull-left[
+
+![Stata](images/stata.png)
+
+]
+
+.pull-right[
+
+![Excel and Word](images/excel-word.png)
+
+]
+
+---
+
+# Advantages of R
+
+## Rstudio lets you do all your work in one place
+
+```{r, echo=FALSE, out.width="80%", fig.align = 'center'}
+knitr::include_graphics("images/rstudio.png")
+```
+
+---
+# Advantages of R
+
+## Export your R work to any number of formats
+
+```{r, echo=FALSE, out.width="90%", fig.align = 'center'}
+knitr::include_graphics("images/rmarkdown.png")
+```
+
+
+---
+
+# Advantages of R
+
+## Programatic updating
+
+
+
+---
+# Advantages of R
+
+### If you're an economist:
+--
+
+- You're likely to want do do a DiD at some point.
+
+- You may be interested in ML or Big Data
+
+![](images/methods.png)
+
+---
+# Advantages of R: Economist
+### The latest DiD methods are implemented in R
+
+For example: 
+- [Difference-in-Differences with multiple time periods](https://www.sciencedirect.com/science/article/abs/pii/S0304407620303948?via%3Dihub)
+- [How Much Should We Trust Staggered Difference-In-Differences Estimates?](https://andrewcbaker.netlify.app/publication/blw_did/)
+
+![](images/did-pedro.PNG)
+
