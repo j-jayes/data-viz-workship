@@ -96,7 +96,31 @@ class: center, top
 class: center, top
 ## Our Own Story Circle
 
+.pull-left[
+
 ### Figure here
+
+]
+
+
+.pull-right[
+
+1. Excel as zone of comfort.
+
+2. You want to make poppin' plots
+
+3. You explore some new data
+
+4. You learn some tricks
+
+5. You get what you wanted
+
+6. It's been a lot, time for a break
+
+7. You return to your own data, with a fresh perspective
+
+
+]
 
 ---
 
@@ -276,9 +300,7 @@ skimr::skim(df)
 
 .pull-left[
 
-```{r}
-skimr::skim(df)
-```
+![](images/skim.PNG)
 
 ]
 
@@ -429,7 +451,7 @@ class: inverse, center, middle
 
 --
 
-### What characterises the couples who conceieved a child before marriage?
+### What characterises the couples who conceived a child before marriage?
 
 ---
 ## What are the types of pregnancies?
@@ -483,7 +505,7 @@ knitr::include_graphics("images/baby.jpg")
 
 --
 
-### If there is fewer than 280 days between marriage and birth, we know the child was most likely a prenuptual pregnancy.
+### If there is fewer than 280 days between marriage and birth, we know the child was most likely a prenuptial pregnancy.
 
 ---
 ### Dealing with dates
@@ -595,7 +617,7 @@ df <- df %>%
            as.numeric(as.duration(birth_date - married_date), "days"),
          # if gap between parents' marriage and child's birth 
          # is less than 280 days we classify it as a prenup_preg
-         prenup_preg = ifelse(days_marriage_to_birth < 280, "Prenuptual", "Conventional"))
+         prenup_preg = ifelse(days_marriage_to_birth < 280, "Prenuptial", "Conventional"))
 
 df %>% count(prenup_preg, sort = T)
 
@@ -728,7 +750,7 @@ df %>%
   scale_fill_manual(values = c("#af8dc3", "#7fbf7b")) +
   labs(y = NULL,
        x = NULL,
-       title = "Share of <span style='color:#7fbf7b'>Prenuptual</span> and <span style='color:#af8dc3'>Conventional</span> Pregnancies by decade") +
+       title = "Share of <span style='color:#7fbf7b'>Prenuptial</span> and <span style='color:#af8dc3'>Conventional</span> Pregnancies by decade") +
   theme(plot.title = element_markdown())
 
 ```
@@ -759,7 +781,7 @@ df %>%
   labs(x = "Age of husband",
        y = "Age of wife",
        colour = "Type of pregnancy",
-       title = "Partner's age comparison between <span style='color:#7fbf7b'>Prenuptual</span> and<br><span style='color:#af8dc3'>Conventional</span> pregnancies") +
+       title = "Partner's age comparison between <span style='color:#7fbf7b'>Prenuptial</span> and<br><span style='color:#af8dc3'>Conventional</span> pregnancies") +
   theme(plot.title = element_markdown())
 ```
 
@@ -797,7 +819,7 @@ b <- df %>%
        fill = "Type of pregnancy")
 
 patchwork <- (a / b)
-patchwork + plot_annotation(title = "More younger partners have prenuptual pregnancies than old:") + 
+patchwork + plot_annotation(title = "More younger partners have prenuptial pregnancies than old:") + 
   theme(plot.title = element_markdown())
 ```
 
@@ -807,7 +829,7 @@ patchwork + plot_annotation(title = "More younger partners have prenuptual pregn
 
 
 ---
-## Is the age gap between partners correlated with prenuptual pregnancy?
+## Is the age gap between partners correlated with prenuptial pregnancy?
 
 .panelset[
 .panel[.panel-name[Plot]
@@ -828,7 +850,7 @@ df %>%
   theme(legend.position = "bottom") +
   labs(x = "Age gap in years\n(husband's age minus wife's age)",
        y = NULL,
-       title = "There appears to be little difference in partners' age gaps\nbetween conventional and prenuptual pregnancies",
+       title = "There appears to be little difference in partners' age gaps\nbetween conventional and prenuptial pregnancies",
        fill = "Type of pregnancy",
        caption = "Note: dotted line represents partners of equal age")
 
@@ -836,9 +858,6 @@ df %>%
 
 ]
 ]
-
----
-
 
 ---
 ### Dealing with categories
@@ -906,15 +925,13 @@ xaringanExtra::use_editable(expires = 1)
 ---
 ### Dealing with categories
 
-We can `filter` for only professions with 6 or more observations.
+We can `filter` for only professions with 7 or more observations.
 
 .panelset[
 .panel[.panel-name[Plot]
 ```{r, professions-2-out, ref.label="professions-2", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
 
 ```
-
-
 
 ]
 
@@ -924,7 +941,7 @@ df %>%
   filter(!is.na(female_profession)) %>% 
   count(female_profession, sort = T) %>% 
   mutate(female_profession = fct_reorder(female_profession, n)) %>% 
-  filter(n > 6) %>% #<<
+  filter(n > 7) %>% #<<
   ggplot(aes(x = n, y = female_profession, 
              fill = str_detect(female_profession, "Domestic"))) + #<<
   geom_col() +
@@ -932,7 +949,7 @@ df %>%
        y = NULL,
        fill = "Contains 'Domestic'",
        title = "Most common female professions",
-       caption = "Limited to professions with more than 5 observations") + #<<
+       caption = "Limited to professions with more than 7 observations") + #<<
   scale_fill_brewer(palette = "Dark2") +
   theme(legend.position = "right") #<<
 ```
@@ -947,7 +964,7 @@ Or we can choose 12 categories and lump with `fct_lump` the remaining categories
 
 .panelset[
 .panel[.panel-name[Plot]
-```{r, professions-3-out, ref.label="professions-3", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+```{r, professions-3-out, ref.label="professions-3", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
 
 ```
 
@@ -969,8 +986,7 @@ df %>%
   labs(x = "Number of observations",
        y = NULL,
        fill = "Contains 'Domestic'",
-       title = "Most common female professions",
-       caption = "Limited to professions with more than 5 observations") + #<<
+       title = "Most common female professions") +
   scale_fill_brewer(palette = "Dark2") +
   theme(legend.position = "right") #<<
 ```
@@ -985,7 +1001,7 @@ Or we can `group_by` more categories, for example, race.
 
 .panelset[
 .panel[.panel-name[Plot]
-```{r, professions-4-out, ref.label="professions-4", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+```{r, professions-4-out, ref.label="professions-4", echo=FALSE, warning=FALSE, fig.width = 7, fig.asp = 0.618, dev = "svg"}
 
 ```
 
@@ -1006,7 +1022,7 @@ df %>%
   labs(x = "Number of observations",
        y = NULL,
        fill = "Domestic",
-       title = "Five most common female professions by race") + #<<
+       title = "Six most common female professions by race") + #<<
   scale_fill_brewer(palette = "Spectral") + theme(legend.position = "none")
 ```
 
@@ -1057,7 +1073,16 @@ locations
 ---
 # Where are these points?
 
-```{r}
+.panelset[
+.panel[.panel-name[Plot]
+```{r, parish-points-1-out, ref.label="parish-points-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+```{r, parish-points-1, eval=F}
 df %>% 
   mutate(parish_address = str_replace_all(parish_address, ",", ",\n")) %>% 
   distinct(lat, long, parish_address) %>% 
@@ -1069,12 +1094,86 @@ df %>%
 
 ```
 
+]
+]
+
 ---
+class: inverse, center, middle
 
+# Can we do better than this?
 
+---
+### 
+
+.panelset[
+.panel[.panel-name[Plot]
+
+![](images/CT-map.PNG)
+
+]
+
+.panel[.panel-name[Code]
+```{r, eval = F}
+library(ggmap)
+# create boudning box for map image
+b_box <- c(left = 18.35, bottom = -34.02, right = 18.65, top = -33.85)
+# create map
+CT_map <- get_map(b_box, zoom = 12)
+
+ggmap(CT_map) +
+    geom_point(aes(long, lat), 
+               data = locations,
+               size = 3,
+               show.legend = F) +
+  geom_text(aes(x = long, y = lat,
+                label = parish_name), 
+            vjust = 1.1,
+               data = df %>% distinct(parish_name, long, lat) %>% 
+              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                     parish_name = str_replace(parish_name, ",", "\n"))) +
+  theme_void() +
+  labs(title = "Where are our churches located?")
+```
+
+]
+]
 
 ---
 ### Plotting results
+
+We get this output from a linear probability model with prenuptial pregnancy as our dependent variable
+
+.panelset[
+.panel[.panel-name[Plot]
+```{r, results-0-out, ref.label="results-0", echo=FALSE, warning=FALSE}
+
+```
+
+]
+
+.panel[.panel-name[Code]
+```{r, results-0, eval=F}
+df %>% 
+  mutate(prenup_preg = as.numeric(as.factor(prenup_preg))) %>% # Makes prenup_preg numeric for regression
+  lm(prenup_preg ~ female_age + male_age + race + parish_name + year_baptized, data = .) %>% # Does linear regression
+  tidy(conf.int = T) %>% # Gets confidence intervals with `conf.int = T`
+  filter(term != "(Intercept)") %>% # Remove intercept from regression output
+  mutate(type = case_when( # Create a type variable for colours later
+    str_detect(term, "parish_name") ~ "Parish FE",
+    str_detect(term, "race") ~ "Race",
+    str_detect(term, "age") ~ "Age",
+    TRUE ~ "Time trend" )) %>% mutate(term = str_remove_all(term, "race|parish_name"), # Tidy the names
+         term = str_replace_all(term, "_", " "),
+         term = str_to_title(term)) %>% 
+  select(term, estimate, std.error, statistic) # Select the ones you want
+  
+
+```
+]
+]
+
+---
+The coefficient plot (tie-fighter plot) is a great way to complement a table
 
 .panelset[
 .panel[.panel-name[Plot]
@@ -1098,9 +1197,10 @@ df %>%
     TRUE ~ "Time trend" )) %>% mutate(term = str_remove_all(term, "race|parish_name"),
          term = str_replace_all(term, "_", " "),
          term = str_to_title(term)) %>% 
-  ggplot(aes(estimate, y = term, colour = type)) +
-  geom_point() + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high, y = term)) +
-  geom_vline(xintercept = 0, lty = 2) +labs(x = NULL, y = NULL, colour = "Var type")
+  mutate(t_stat = ifelse(abs(statistic) > 2, "Significant", "Insignificant")) %>% # If t-stat greater than 2
+  ggplot(aes(estimate, y = term, colour = type)) + 
+  geom_point() + geom_errorbarh(aes(xmin = conf.low, xmax = conf.high, y = term)) + # `geom_errorbarh` gives horizontal error bars
+  geom_vline(xintercept = 0, lty = 2) +labs(x = NULL, y = NULL, colour = "Var type", title = "Correlates of prenuptial pregnancy") + facet_wrap(~ t_stat, nrow = 2, scales = "free_y") # facet wrap gives a panel for insig. and sig. results
 
 ```
 
@@ -1125,7 +1225,6 @@ class: inverse, center, middle
 ### Stick to the winners:
 
 - line charts
-
 - scatter plots
 - column charts
 - density plots
@@ -1144,7 +1243,7 @@ class: inverse, center, middle
 
 ---
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/5Zg-C8AAIGg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="800" height="450" src="https://www.youtube.com/embed/5Zg-C8AAIGg?controls=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ---
 
@@ -1161,16 +1260,6 @@ class: inverse, center, middle
 ### Interactivity
 
 ### Reproducing figures for publication
-
----
-
-# Making maps
-
-Contextual maps.
-
-Chloropleths.
-
-Animated maps.
 
 ---
 # Coffee rating map
@@ -1433,9 +1522,33 @@ df %>%
 
 ]
 ]
+---
+### Pros and cons with a line chart
+
+.pull-left[
+
+```{r, greece-denmark-demo-0-out-small, ref.label="greece-denmark-demo-0", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
+
+```
+
+]
+
+.pull-right[
+
+### Pros
+
+- Familiar
+
+### Cons
+
+- Hard to keep track of each series
+
+- Difficult to compare movements across short periods
+
+]
 
 ---
-### An alternative
+### An alternative: time on a third axis
 .panelset[
 .panel[.panel-name[Plot]
 ```{r greece-denmark-demo-1-out, ref.label="greece-denmark-demo-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
@@ -1467,10 +1580,10 @@ df %>%
   labs(x = "Total fertility rate",
        y = "Proportion of births\noutside of marriage",
        title = "Fertility vs births outside of marriage 
-       in <span style='color:#C60C30'>Denmark</span> and 
+       in<br><span style='color:#C60C30'>Denmark</span> and 
        <span style='color:#0D5EAF'>Greece</span>") +
   theme(legend.position = "none",
-        plot.title = element_markdown(size = 18))
+        plot.title = element_markdown())
 
 ```
 
@@ -1480,7 +1593,7 @@ df %>%
 
 ---
 
-## What have we learned?
+### What have we learned?
 
 .pull-left[
 
@@ -1503,7 +1616,7 @@ df %>%
 
 ---
 
-## What have we changed?
+### What have we changed?
 
 .pull-left[
 
@@ -1751,7 +1864,22 @@ df %>%
 
 Publishing your research on the web is a good way to get it out there. Making your visualizations interactive is a fantastic way to have your readers explore the story you tell.
 
+.pull-left[
+
+I'm not an expert in this, but there are [lots of resources](https://www.r-graph-gallery.com/interactive-charts.html) already and [many more](https://davidgohel.github.io/ggiraph/) are on the way!
+
+The solutions in R make it easy to apply one command (for example `ggplotly`) and get back an interactive chart from a `ggplot`.
+
+]
+
+.pull-right[
+
+![](images/plotly.PNG)
+
+]
+
 ---
+### Interactive map for Anglican church locations
 
 .panelset[
 .panel[.panel-name[Plot]
@@ -1805,6 +1933,7 @@ df %>%
 
 ```{r, echo = F}
 int_fig <- read_rds("data/interactive_fig.rds")
+
 int_fig
 ```
 
@@ -1819,7 +1948,7 @@ int_fig
 .panelset[
 .panel[.panel-name[Plot]
 
-```{r recreate-1-out, ref.label="recreate-1", echo=FALSE, warning=FALSE, message=F}
+```{r recreate-1-out, ref.label="recreate-1", echo=FALSE, warning=FALSE, message=F, fig.width = 8, fig.asp = 0.618, dev = "svg"}
 
 ```
 
@@ -1854,12 +1983,23 @@ df %>%
 
 ---
 
+<iframe width="800" height="450" src="https://www.youtube.com/embed/TVCFedRgg5Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+---
+
 class: inverse, center, middle
 
 # 7. Return to your familiar situation
 
 ---
-### Thank you
+### Resources
+
+Here is a link the resources at my website [Interlude One](https://interludeone.com/posts/2021-05-21-ggplot-resources/).
+
+![](images/resources.PNG)
+
+---
+### Thank you!
 
 ![](images/library.jpg)
 

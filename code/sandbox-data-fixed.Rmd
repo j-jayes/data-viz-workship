@@ -196,7 +196,7 @@ locations %>%
 b_box <- c(left = 18.35, bottom = -34.02, right = 18.65, top = -33.85)
 
 # create map
-CT_map <- get_map(b_box, zoom = 11)
+CT_map <- get_map(b_box, zoom = 12)
 ```
 
 ### Nice!
@@ -280,9 +280,9 @@ ggmap(CT_map) +
                show.legend = F) +
   geom_text(aes(x = long, y = lat,
                 label = parish_name), 
-            vjust = 1.1,
-               data = df %>% distinct(parish_name, long, lat) %>% 
-              mutate(parish_name = str_remove(parish_name, "Cape Town,"),
+                vjust = 1.1,
+                data = df %>% distinct(parish_name, long, lat) %>% 
+                mutate(parish_name = str_remove(parish_name, "Cape Town,"),
                      parish_name = str_replace(parish_name, ",", "\n"))) +
   theme_void() +
   labs(title = "Where are our churches located?")  
