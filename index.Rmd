@@ -1931,11 +1931,7 @@ df %>%
 
 ### Have a look at [Claus Wilke's slides here](https://wilkelab.org/SDS375/slides/interactive-plots.html#1) for more info on Interactive plots
 
-```{r, echo = F}
-int_fig <- read_rds("data/interactive_fig.rds")
-
-int_fig
-```
+![](images/int-fig.PNG)
 
 ---
 ### Recreating published figures
