@@ -2,8 +2,8 @@
 title: "Data Visualization for Economic Historians"
 subtitle: ""
 author: "Jonathan Jayes"
-institute: "LEAP Stellenbosch"
-date: "2021/05/28 (updated: `r Sys.Date()`)"
+institute: "Lund University"
+date: "2023/02/01 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -13,7 +13,7 @@ output:
       countIncrementalSlides: false
 ---
 class: inverse, center, bottom
-background-image: url(images/LEAP_logo.png)
+background-image: url(images/LU_Ekonomiho╠êgskolan_BLACK_ENG.png)
 
 ## Follow along with the slides - URL in Chat
 
@@ -23,11 +23,12 @@ options(htmltools.dir.version = FALSE)
 knitr::opts_chunk$set(message = F, warning = F)
 
 library(pacman)
-p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext, ggiraph, htmlwidgets, glue)
+p_load(tidyverse, xaringan, xaringanExtra, scales, ggrepel, ggtext, ggiraph, htmlwidgets, glue, xaringanthemer)
 
 # ggplot2 settings so plots scale well for slide size 
 theme_set(theme_light(16)) # 16 for full width, 18 for half width 
 update_geom_defaults("point", list(size = 2.0)) # 2 for full width, 2.5 for half width
+style_duo_accent(primary_color = "#035AA6", secondary_color = "#03A696")
 
 ```
 ---
@@ -35,10 +36,10 @@ update_geom_defaults("point", list(size = 2.0)) # 2 for full width, 2.5 for half
 
 .pull-left[
 
-### 1. Get you excited about data viz.
-### 2. Show some tips and tricks that make your figures pop
-irrespective of software used
-### 3. Evangelize R
+### 1. Get you excited about drawing maps
+### 2. Show some tips and tricks that make your maps pop
+
+This is not about the software but the theory behind communicating well with maps
 
 ]
 
@@ -57,15 +58,11 @@ Photo from [Hans Rosling's TED Talk](https://www.ted.com/talks/hans_rosling_the_
 
 ### 1. Exploratory Data Analysis
 
-### 2. Why Data Viz?
-
-#### Break
+### 2. Why maps
 
 ### 3. Polishing Figures for Publication
 
-### 4. Interactivity
-
-### 5. Recreating Published Figures
+### 4. Recreating Published Figures
 
 ]
 
@@ -107,7 +104,7 @@ class: center, top
 
 1. Excel as zone of comfort.
 
-2. You want to make poppin' plots
+2. You want to make poppin' maps
 
 3. You explore some new data
 
@@ -248,229 +245,6 @@ class: inverse, center, middle
 ---
 ## Where do we start?
 
-.pull-left[
-
-- We will use some data that Laura Richardson has analysed.
-
-- It contains baptism records from seven Anglican churches in Cape Town between 1910 and 1960.
-
-- [Here is a link](https://scholar.sun.ac.za/handle/10019.1/109081) to her Master's thesis, an exploration of "**prenuptial pregnancy and unmarried motherhood** amongst a select group of South Africans living in Cape Town" in the first half of the twentieth century. 
-
-]
-
-.pull-right[
-
-![](images/laura-thesis.PNG)
-
-]
-
----
-# What does the data look like?
-
-![](images/excel-comfort.PNG)
-
----
-# What does the data look like?
-
-- It has one row per child who is baptised (one row per observation)
-
-- Every column is a variable
-
-- It is a wide dataset
-
----
-# What does the data look like in R?
-
-```{r}
-df <- read_rds("data/baptism_data.rds")
-
-head(df)
-
-```
-
----
-# How can we quickly understand what it is made up of?
-
-```{r}
-skimr::skim(df)
-```
-
----
-# What can we see?
-
-.pull-left[
-
-![](images/skim.PNG)
-
-]
-
-.pull-right[
-
-- Number of baptisms (1604)
-
-- What data is missing?
-
-- For `female_profession`, `female_country` and `male_country` we are missing data for more than 20 percent of our observations
-
-]
-
----
-# How many children are baptized in each church?
-
-```{r}
-df %>% 
-  count(parish_name, sort = TRUE)
-
-```
-
----
-# When are these children baptized?
-
-```{r}
-df %>% 
-  group_by(year_baptized, parish_name) %>% 
-  summarise(number_of_baptisms = n()) %>% 
-  ungroup()
-
-```
-
----
-# How can we vizualize this?
-
-.panelset[
-.panel[.panel-name[Plot]
-```{r baptism-1-out, ref.label="baptism-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
-
-```
-
-]
-
-.panel[.panel-name[Code]
-
-```{r, baptism-1, eval=F}
-df %>% 
-  group_by(year_baptized, parish_name) %>% 
-  mutate(number_of_baptisms = n()) %>% 
-  ungroup() %>% 
-  ggplot(aes(x = year_baptized, y = number_of_baptisms, colour = parish_name)) +
-  geom_line() +
-  scale_color_brewer(palette = "Dark2") +
-  labs(x = NULL,
-       y = "Number of baptisms per year",
-       colour = "Parish name")
-
-```
-
-]
-]
----
-# What do we like and dislike?
-
-```{r xaringan-editable, echo=FALSE}
-xaringanExtra::use_editable(expires = 1)
-```
-
-.pull-left[
-
-```{r baptism-1-out-small, ref.label="baptism-1", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 1.3, dev = "svg"}
-
-```
-
-]
-
-.pull-right[
-
-### Improvements:
-
-## .can-edit[idea]
-
-## .can-edit[idea]
-
-]
-
----
-# How can we make it clearer?
-
-.panelset[
-.panel[.panel-name[Plot]
-```{r baptism-2-out, ref.label="baptism-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
-
-```
-
-]
-
-.panel[.panel-name[Code]
-
-```{r, baptism-2, eval=F}
-df %>% 
-  group_by(year_baptized, parish_name) %>% 
-  mutate(number_of_baptisms = n()) %>% 
-  ungroup() %>% 
-  ggplot(aes(x = year_baptized, y = number_of_baptisms, colour = parish_name)) +
-  geom_line() +
-  scale_color_brewer(palette = "Dark2") +
-  labs(x = NULL,
-       y = "Number of baptisms per year",
-       colour = "Parish name") +
-  facet_wrap(~ parish_name) + #<<
-  theme(legend.position = "none") #<<
-
-```
-
-]
-]
----
-# Takeaways
-
-.pull-left[
-```{r baptism-2-out-small, ref.label="baptism-2", echo=FALSE, warning=FALSE, fig.width = 8, fig.asp = 0.618, dev = "svg"}
-
-```
-]
-
-.pull-right[
-
-- **Christ Church, Kenilworth** and **St Peter's, Mowbray** have baptism records for the entire period
-
-- Others have only periodic data
-
-- The bulk of our data comes from **St Mark's, Athlone**, and begins later in the series
-
-- We must think about these factors when examining time trends
-
-]
-
----
-
-class: inverse, center, middle
-
-# 4. You adapt to it
-
----
-# Our question:
-
---
-
-### What characterises the couples who conceived a child before marriage?
-
----
-## What are the types of pregnancies?
-
-.pull-left[
-
-### Conventional pregnancies
-
-- Child is conceived after marriage
-
-### Prenuptial pregnancy
-
-- Child is conceived before marriage
-
-]
-
-.pull-right[
-
-![](images/baby-2.jpg)
 
 ]
 
